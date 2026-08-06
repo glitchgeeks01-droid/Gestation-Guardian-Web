@@ -11,6 +11,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script id="tailwind-config">tailwind.config = { theme: { extend: { colors: { "primary": "#00497d", "secondary": "#535f70", "error": "#ba1a1a", "surface": "#f8fafc" }, fontFamily: { headline: ["Manrope"], body: ["Inter"] } } } }</script>
     <style>.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; } body { font-family: 'Inter', sans-serif; background-color: #f8fafc; } .grid-card { background: white; border: 1px solid #e2e8f0; border-radius: 1.5rem; padding: 1.5rem; transition: all 0.2s ease; cursor: pointer; }</style>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <!-- Config & Service -->
+    <script src="../js/firebase-config.js"></script>
+    <script src="../js/firebase-service.js"></script>
 </head>
 <body class="flex overflow-hidden">
     <aside id="sidebar-target" class="h-screen w-64 fixed left-0 top-0 bg-white border-r border-slate-200 flex flex-col py-8 z-50"></aside>
@@ -93,14 +100,11 @@
 
             let patient = null;
 
-            // 1. Fetch real patient data from the connector backend (port 3001)
+            // 1. Fetch real patient data from Firebase Firestore
             try {
-                const res = await fetch(`http://localhost:3001/patients/${patientId}`);
-                if (res.ok) {
-                    patient = await res.json();
-                }
+                patient = await window.firebaseService.getPatientById(patientId);
             } catch (err) {
-                console.warn("Failed to fetch dynamic patient details, falling back to simulated database.", err);
+                console.warn("Failed to fetch dynamic patient details from Firebase, falling back to simulated database.", err);
             }
 
             // 2. Fallback to client-side simulated database

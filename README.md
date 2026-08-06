@@ -1,72 +1,58 @@
 # 🩺 Gestation Guardian - Doctor Oversight Portal
 
-**Gestation Guardian Web** is a high-fidelity clinical oversight dashboard designed for healthcare providers. It allows doctors and practitioners to monitor real-time health metrics (Blood Pressure, Maternal Heart Rate, SpO2, Uterine activity, and Fetal Heart Rate) and review preeclampsia risk scores of pregnant patients.
+**Gestation Guardian Web** is a clinical oversight portal designed for healthcare providers to track pregnant patients' health metrics in real-time. It is built as a serverless static web application utilizing Firebase.
 
 ![Clinical Portal Banner](https://api.dicebear.com/7.x/initials/svg?seed=GGWeb&backgroundColor=00497d&textColor=FFFFFF)
 
 ---
 
-## ✨ Key Features
-
-### 📋 Real-Time Triage List
-A clean, clinical patient grid showing current gestational weeks, active alert levels (Critical/Red, Warning/Amber, Stable/Green), and latest vitals.
-
-### 📈 Live Telemetry deep dives
-Interactive visual detail pages for:
-- Maternal ECG & Fetal Heart Rate Baseline (with live smartwatch simulators).
-- Mean Arterial Pressure (MAP) and Blood Pressure history logs.
-- Oxygen Saturation (SpO₂).
-- Uterine Activity / Contractions tracker.
-
-### 🛡️ Enterprise HIPAA Secure
-A placeholder security protocol for enterprise medical record systems, complete with login authorization flows.
-
----
-
 ## 🛠️ Technology Stack
 
-- **Frontend**: 
-  - Semantic HTML5, Vanilla JavaScript (ES6+).
-  - **Tailwind CSS**: Modern layout engine with premium color palette and glassmorphism elements.
-  - **Chart.js**: Render live smartwatch telemetry, ECG waveforms, and vitals history logs.
-  - **Material Symbols**: Medical icon suite.
-- **Backend**:
-  - **Node.js** & **Express.js**: Light backend server running on port `3001` to prevent local conflicts with client app servers.
-- **Database Integration**:
-  - **SQLite (`sqlite3`)**: Connects directly to the Gestation Guardian Client App database (`database.sqlite`) in real-time to load patient profiles, BP history logs, and vitals logs.
-  - **MongoDB** (Optional legacy database for isolated deployments).
+- **Frontend**:
+  - **HTML5 & CSS3**: Styled layout with glassmorphism effects.
+  - **Vanilla JavaScript**: Pure JS ES6+ (no heavy frontend frameworks required).
+  - **Tailwind CSS (CDN)**: Sleek styling engine.
+  - **Chart.js**: Interactive smartwatch telemetry and live vitals graphing.
+- **Backend (Serverless)**:
+  - **Firebase App**: Core initialization.
+  - **Firebase Firestore**: Real-time Firestore database to store and synchronize patient records and telemetry.
+  - **Firebase Authentication**: User credential authorization for clinical practitioners.
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Setting Up Firebase
 
-### Prerequisites
-- [Node.js](https://nodejs.org/) (v16+)
-- The Gestation Guardian client app database must be present locally at `C:/Users/PHK/Desktop/Gestation Guardian/server/database.sqlite`.
+### 1. Create a Firebase Project
+1. Go to the [Firebase Console](https://console.firebase.google.com/).
+2. Create a new project named **Gestation Guardian**.
+3. Enable **Firestore Database** in test or production mode.
+4. Enable **Email/Password sign-in** under Authentication.
 
-### 1. Run the Backend Server
-1. Navigate to the folder:
-   ```bash
-   cd doctor-dashboard
+### 2. Configure Credentials
+1. Create a Web App within your Firebase project to get the configuration credentials.
+2. Open `js/firebase-config.js` in the codebase.
+3. Replace the placeholder config values with your project's credentials:
+   ```javascript
+   const firebaseConfig = {
+     apiKey: "YOUR_API_KEY",
+     authDomain: "YOUR_AUTH_DOMAIN",
+     projectId: "YOUR_PROJECT_ID",
+     storageBucket: "YOUR_STORAGE_BUCKET",
+     messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+     appId: "YOUR_APP_ID"
+   };
    ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Start the Express server:
-   ```bash
-   node js/server.js
-   ```
-   *The server connects to the SQLite database and listens on `http://localhost:3001`.*
 
-### 2. Run the Frontend Dashboard
-Start a static web server to view the interface:
+### 3. Automatic Seeding (First Run)
+When you launch the app, `firebase-service.js` will detect if your Firestore `patients` collection is empty. If it is, it will **automatically seed** Firestore with the default mock patients (*Alice R.*, *Maya T.*, *Sarah J.*, and *Elena M.*) so you have an active dashboard immediately!
+
+---
+
+## 💻 Running the App Locally
+
+Since the backend is fully serverless with Firebase, you do not need to run a local Node/Express server anymore! Simply serve the static HTML folder:
+
 ```bash
 npx http-server -p 8082 -c-1
 ```
 Open your browser and navigate to **`http://localhost:8082/`**.
-
----
-
-## 📜 License
-Internal Project - All Rights Reserved.
