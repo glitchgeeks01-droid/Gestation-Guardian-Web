@@ -4,7 +4,7 @@ async function loadPatientsFromMongo() {
     const grid = document.getElementById('patient-grid');
 
     try {
-        const response = await fetch('http://localhost:3000/patients');
+        const response = await fetch('http://localhost:3001/patients');
         const patients = await response.json();
 
         if (patients.length === 0) {
@@ -47,7 +47,7 @@ async function loadPatientsFromMongo() {
         }).join('');
 
     } catch (error) {
-        grid.innerHTML = `<p class="col-span-full text-center text-error font-bold">Failed to connect to Local Server (Port 3000)</p>`;
+        grid.innerHTML = `<p class="col-span-full text-center text-error font-bold">Failed to connect to Local Server (Port 3001)</p>`;
     }
 }
 

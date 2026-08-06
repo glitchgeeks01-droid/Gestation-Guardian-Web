@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html class="light" lang="en">
 <head>
     <meta charset="utf-8">
@@ -90,41 +90,75 @@
             const urlParams = new URLSearchParams(window.location.search);
             let patientId = urlParams.get('id');
             if (patientId) { patientId = patientId.replace('/', ''); }
-            const patient = simulatedDatabase.find(p => p.id === patientId) || simulatedDatabase[0];
+
+            let patient = null;
+
+            // 1. Fetch real patient data from the connector backend (port 3001)
+            try {
+                const res = await fetch(`http://localhost:3001/patients/${patientId}`);
+                if (res.ok) {
+                    patient = await res.json();
+                }
+            } catch (err) {
+                console.warn("Failed to fetch dynamic patient details, falling back to simulated database.", err);
+            }
+
+            // 2. Fallback to client-side simulated database
+            if (!patient) {
+                patient = simulatedDatabase.find(p => p.id === patientId) || simulatedDatabase[0];
+                // Normalise the simulated structure if necessary
+                if (patient && !patient.image && patient.photo) {
+                    patient.image = patient.photo;
+                }
+            }
 
             if (!patient) return;
 
             document.getElementById('detail-name').innerText = patient.name;
             document.getElementById('detail-id').innerText = patient.id;
             document.getElementById('detail-weeks').innerText = patient.weeks + " Weeks Gestation";
-            document.getElementById('detail-image').src = patient.image;
-            document.getElementById('detail-mhr').innerText = patient.vitals.maternalHR;
-            document.getElementById('detail-fhr').innerText = patient.vitals.fetalHR;
-            document.getElementById('detail-spo2').innerText = patient.vitals.spo2;
-            document.getElementById('detail-contractions').innerText = patient.vitals.contractions;
-            document.getElementById('detail-bp').innerHTML = `${patient.vitals.bpSys} <span class="text-2xl text-slate-400 font-medium">/ ${patient.vitals.bpDia}</span>`;
+            document.getElementById('detail-image').src = patient.photo || patient.image;
+            
+            const vitals = patient.vitals || {};
+            document.getElementById('detail-mhr').innerText = vitals.maternalHR || '--';
+            document.getElementById('detail-fhr').innerText = vitals.fetalHR || '--';
+            document.getElementById('detail-spo2').innerText = vitals.spo2 || '--';
+            document.getElementById('detail-contractions').innerText = vitals.contractions !== undefined ? vitals.contractions : '--';
+            
+            if (vitals.bpSys && vitals.bpDia) {
+                document.getElementById('detail-bp').innerHTML = `${vitals.bpSys} <span class="text-2xl text-slate-400 font-medium">/ ${vitals.bpDia}</span>`;
+            } else {
+                document.getElementById('detail-bp').innerHTML = '-- <span class="text-2xl text-slate-400 font-medium">/ --</span>';
+            }
 
             const statusEl = document.getElementById('detail-status');
             statusEl.innerText = patient.status;
             
-            if (patient.status === 'Critical') {
+            // Clean up styling classes first
+            document.getElementById('bp-card').className = 'grid-card text-slate-900 border border-slate-200 relative overflow-hidden hover:shadow-lg group';
+            document.getElementById('fhr-card').className = 'grid-card border border-slate-200 hover:shadow-lg hover:border-red-300 group relative';
+            document.getElementById('detail-fhr-text').className = 'text-5xl font-black mb-2';
+
+            if (patient.status === 'Critical' || patient.status === 'Red') {
                 statusEl.className = 'bg-error/10 text-error px-3 py-1 rounded-md text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm';
                 document.getElementById('bp-card').classList.add('bg-slate-900', 'text-white');
                 document.getElementById('bp-warning').innerText = "Elevated Risk";
                 document.getElementById('fhr-card').classList.add('bg-red-50/20', 'border-red-200');
                 document.getElementById('detail-fhr-text').classList.add('text-error');
                 document.getElementById('contraction-warning').innerText = "Irregular Detected";
-                document.getElementById('contraction-warning').classList.add('text-amber-600');
+                document.getElementById('contraction-warning').className = "text-xs font-bold uppercase flex items-center gap-1 text-amber-600";
             } 
-            else if (patient.status === 'Warning') {
+            else if (patient.status === 'Warning' || patient.status === 'Amber') {
                 statusEl.className = 'bg-amber-100 text-amber-700 px-3 py-1 rounded-md text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm';
                 document.getElementById('bp-warning').innerText = "Borderline Normal";
                 document.getElementById('contraction-warning').innerText = "Monitor Activity";
+                document.getElementById('contraction-warning').className = "text-xs font-bold uppercase flex items-center gap-1 text-amber-600";
             } 
             else {
                 statusEl.className = 'bg-emerald-100 text-emerald-700 px-3 py-1 rounded-md text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm';
                 document.getElementById('bp-warning').innerText = "Normal Range";
                 document.getElementById('contraction-warning').innerText = "No Activity Detected";
+                document.getElementById('contraction-warning').className = "text-xs font-bold uppercase flex items-center gap-1 text-slate-500";
             }
         });
     </script>
