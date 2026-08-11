@@ -1,6 +1,6 @@
-# 🩺 Gestation Guardian - Doctor Oversight Portal
+# 🩺 GG Doctor Dashboard - Doctor Oversight Portal
 
-**Gestation Guardian Web** is a clinical oversight portal designed for healthcare providers to track pregnant patients' health metrics in real-time. It is built as a serverless static web application utilizing Firebase.
+**GG Doctor Dashboard Web** is a clinical oversight portal designed for healthcare providers to track pregnant patients' health metrics in real-time. It is built as a serverless static web application utilizing Firebase.
 
 ![Clinical Portal Banner](https://api.dicebear.com/7.x/initials/svg?seed=GGWeb&backgroundColor=00497d&textColor=FFFFFF)
 
@@ -24,7 +24,7 @@
 
 ### 1. Create a Firebase Project
 1. Go to the [Firebase Console](https://console.firebase.google.com/).
-2. Create a new project named **Gestation Guardian**.
+2. Create a new project named **GG Doctor Dashboard**.
 3. Enable **Firestore Database** in test or production mode.
 4. Enable **Email/Password sign-in** under Authentication.
 

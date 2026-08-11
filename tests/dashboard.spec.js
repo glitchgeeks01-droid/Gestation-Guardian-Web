@@ -3,7 +3,7 @@ const { test, expect } = require('@playwright/test');
 // Clinical Config
 const DEV_URL = 'http://localhost:3000'; 
 
-test.describe('Gestation Guardian - Standard Dashboard Protocol', () => {
+test.describe('GG Doctor Dashboard - Standard Dashboard Protocol', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(DEV_URL, { waitUntil: 'domcontentloaded' });
@@ -11,7 +11,7 @@ test.describe('Gestation Guardian - Standard Dashboard Protocol', () => {
 
   test('Protocol 01: Core Systems & Data Integrity', async ({ page }) => {
     // 1. Verify Branding
-    await expect(page.locator('body')).toContainText('Maternal Oversight');
+    await expect(page.locator('body')).toContainText('GG Doctor Dashboard');
     
     // 2. Verify Patient Grid Load (Looking for our initial simulated patients)
     // We check if the "Alice R." card exists

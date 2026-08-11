@@ -7,7 +7,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const dbPath = 'C:/Users/PHK/Desktop/Gestation Guardian/server/database.sqlite';
+const dbPath = 'C:/Users/PHK/Desktop/GG Doctor Dashboard/server/database.sqlite';
 
 const mockPatients = [
   {
