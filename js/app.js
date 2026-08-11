@@ -40,11 +40,7 @@ function injectMetricNav() {
     // Only inject on recognised detail pages
     const detailPages = [
         'patient-detail.html',
-        'ecg-detail.html',
         'blood-pressure-detail.html',
-        'hrv-detail.html',
-        'blood-oxygen-detail.html',
-        'respiratory-rate-detail.html',
         'heart-rate-detail.html',
     ];
     const cleanPage = page.replace(/\?.*$/, '');
@@ -55,11 +51,7 @@ function injectMetricNav() {
 
     const metrics = [
         { file: 'patient-detail',       icon: 'person',           label: 'Overview'      },
-        { file: 'ecg-detail',           icon: 'monitor_heart',    label: 'ECG'           },
         { file: 'blood-pressure-detail',icon: 'sphygmomanometer', label: 'Blood Pressure'},
-        { file: 'hrv-detail',           icon: 'favorite',         label: 'Fetal HR'      },
-        { file: 'blood-oxygen-detail',  icon: 'pulmonology',      label: 'SpO₂'          },
-        { file: 'respiratory-rate-detail',icon:'air',             label: 'Respiratory'   },
         { file: 'heart-rate-detail',    icon: 'watch',            label: 'Smartwatch HR' },
     ];
 
@@ -116,39 +108,41 @@ function initLiveChart() {
     const initialData = Array.from({length: 20}, () => Math.floor(Math.random() * (85 - 70 + 1) + 70));
     const labels = Array.from({length: 20}, (_, i) => i);
 
-    const liveChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Maternal HR (Smartwatch)',
-                data: initialData,
-                borderColor: '#e11d48',
-                backgroundColor: 'rgba(225, 29, 72, 0.1)',
-                borderWidth: 3,
-                tension: 0.4,
-                fill: true,
-                pointRadius: 0,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: { duration: 400, easing: 'linear' },
-            scales: {
-                x: { display: false },
-                y: { display: true, min: 50, max: 120, grid: { color: 'rgba(0,0,0,0.05)' } }
+    if (typeof Chart !== 'undefined') {
+        const liveChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Maternal HR (Smartwatch)',
+                    data: initialData,
+                    borderColor: '#e11d48',
+                    backgroundColor: 'rgba(225, 29, 72, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 0,
+                }]
             },
-            plugins: { legend: { display: false } }
-        }
-    });
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 400, easing: 'linear' },
+                scales: {
+                    x: { display: false },
+                    y: { display: true, min: 50, max: 120, grid: { color: 'rgba(0,0,0,0.05)' } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
 
-    setInterval(() => {
-        const newReading = Math.floor(Math.random() * (82 - 72 + 1) + 72);
-        liveChart.data.datasets[0].data.push(newReading);
-        liveChart.data.datasets[0].data.shift();
-        const bigNumberDisplay = document.querySelector('.text-7xl');
-        if (bigNumberDisplay) bigNumberDisplay.innerText = newReading;
-        liveChart.update();
-    }, 1500);
+        setInterval(() => {
+            const newReading = Math.floor(Math.random() * (82 - 72 + 1) + 72);
+            liveChart.data.datasets[0].data.push(newReading);
+            liveChart.data.datasets[0].data.shift();
+            const bigNumberDisplay = document.querySelector('.text-7xl');
+            if (bigNumberDisplay) bigNumberDisplay.innerText = newReading;
+            liveChart.update();
+        }, 1500);
+    }
 }

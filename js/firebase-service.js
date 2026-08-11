@@ -14,7 +14,7 @@ const mockPatients = [
     hr: 142,
     photo: "https://ui-avatars.com/api/?name=Alice+R&background=fecaca&color=ba1a1a",
     vitals: {
-      maternalHR: 82, fetalHR: 142, bpSys: 145, bpDia: 92, spo2: 96, contractions: 3,
+      maternalHR: 82, fetalHR: 142, bpSys: 145, bpDia: 92, contractions: 3,
       weight: 78.4, weightVelocity: 1.2, kicks: 6, kicksStatus: "Low Activity", sleep: 5.5, sleepQuality: "Restless"
     },
     medicalHistory: {
@@ -31,7 +31,7 @@ const mockPatients = [
     hr: 138,
     photo: "https://ui-avatars.com/api/?name=Maya+T&background=fef3c7&color=b45309",
     vitals: {
-      maternalHR: 76, fetalHR: 138, bpSys: 130, bpDia: 85, spo2: 98, contractions: 1,
+      maternalHR: 76, fetalHR: 138, bpSys: 130, bpDia: 85, contractions: 1,
       weight: 82.1, weightVelocity: 0.7, kicks: 12, kicksStatus: "Normal Activity", sleep: 6.8, sleepQuality: "Moderate"
     },
     medicalHistory: {
@@ -48,7 +48,7 @@ const mockPatients = [
     hr: 125,
     photo: "https://ui-avatars.com/api/?name=Sarah+J&background=e0f2fe&color=00497d",
     vitals: {
-      maternalHR: 72, fetalHR: 125, bpSys: 118, bpDia: 78, spo2: 100, contractions: 0,
+      maternalHR: 72, fetalHR: 125, bpSys: 118, bpDia: 78, contractions: 0,
       weight: 85.5, weightVelocity: 0.3, kicks: 18, kicksStatus: "High Activity", sleep: 8.0, sleepQuality: "Good"
     },
     medicalHistory: {
@@ -65,7 +65,7 @@ const mockPatients = [
     hr: 130,
     photo: "https://ui-avatars.com/api/?name=Elena+M&background=dcfce7&color=047857",
     vitals: {
-      maternalHR: 68, fetalHR: 130, bpSys: 115, bpDia: 75, spo2: 99, contractions: 0,
+      maternalHR: 68, fetalHR: 130, bpSys: 115, bpDia: 75, contractions: 0,
       weight: 74.0, weightVelocity: 0.4, kicks: 14, kicksStatus: "Normal Activity", sleep: 7.5, sleepQuality: "Good"
     },
     medicalHistory: {
@@ -135,7 +135,7 @@ window.firebaseService = {
 
   getPatientById: async (id) => {
     if (!isFirebaseEnabled) {
-      return mockPatients.find(p => p.id === id) || mockPatients[0];
+      return mockPatients.find(p => p.id === id) || null;
     }
     try {
       const doc = await db.collection('patients').doc(id).get();

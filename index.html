@@ -89,11 +89,7 @@
           <p id="panel-weeks" class="text-primary font-bold text-sm mt-1"></p>
         </div>
       </div>
-      <!-- ECG Canvas -->
-      <div class="mb-5 bg-slate-900 rounded-2xl p-4 overflow-hidden">
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse inline-block"></span>Live ECG Feed</p>
-        <canvas id="ecg-canvas" height="56" class="w-full block"></canvas>
-      </div>
+
       <!-- Vitals 2x2 -->
       <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Current Telemetry</h3>
       <div class="grid grid-cols-2 gap-3 mb-5">
@@ -110,9 +106,9 @@
           <p class="text-xl font-black text-slate-900" id="panel-bp">--/--</p>
           <p class="text-[9px] text-slate-400 font-medium">mmHg</p>
         </div>
-        <div class="bg-sky-50/50 p-4 rounded-2xl border border-sky-100">
-          <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">SpO₂</p>
-          <p class="text-3xl font-black text-sky-700" id="panel-spo2">--%</p>
+        <div class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100">
+          <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Contractions</p>
+          <p class="text-3xl font-black text-indigo-700"><span id="panel-contractions">--</span><span class="text-sm font-medium text-indigo-400">/10m</span></p>
         </div>
       </div>
       <button id="view-details-btn" class="w-full bg-slate-100 text-primary border border-slate-200 rounded-xl p-4 font-bold flex justify-center items-center gap-2 hover:bg-slate-200 transition-colors shadow-sm">
@@ -240,7 +236,6 @@ function openIntervention(id){
 
 function closePanel(){
   document.getElementById('side-panel').classList.add('translate-x-full');
-  if(ecgRaf){cancelAnimationFrame(ecgRaf);ecgRaf=null;}
 }
 
 // IoT sim

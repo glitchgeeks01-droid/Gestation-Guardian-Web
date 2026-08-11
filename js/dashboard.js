@@ -2,8 +2,10 @@
 
 async function loadPatientsFromFirebase() {
     const grid = document.getElementById('patient-grid');
+    if (!grid) return;
 
     try {
+        if (!window.firebaseService) return;
         const patients = await window.firebaseService.getPatients();
 
         if (patients.length === 0) {

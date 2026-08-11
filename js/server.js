@@ -7,7 +7,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const dbPath = 'C:/Users/PHK/Desktop/GG Doctor Dashboard/server/database.sqlite';
+const dbPath = path.join(__dirname, '..', 'server', 'database.sqlite');
 
 const mockPatients = [
   {
@@ -17,7 +17,7 @@ const mockPatients = [
     status: "Critical",
     hr: 142,
     photo: "https://ui-avatars.com/api/?name=Alice+R&background=fecaca&color=ba1a1a",
-    vitals: { maternalHR: 82, fetalHR: 142, bpSys: 145, bpDia: 92, spo2: 96, contractions: 3 }
+    vitals: { maternalHR: 82, fetalHR: 142, bpSys: 145, bpDia: 92, contractions: 3 }
   },
   {
     id: "RPM-114",
@@ -26,7 +26,7 @@ const mockPatients = [
     status: "Warning",
     hr: 138,
     photo: "https://ui-avatars.com/api/?name=Maya+T&background=fef3c7&color=b45309",
-    vitals: { maternalHR: 76, fetalHR: 138, bpSys: 130, bpDia: 85, spo2: 98, contractions: 1 }
+    vitals: { maternalHR: 76, fetalHR: 138, bpSys: 130, bpDia: 85, contractions: 1 }
   },
   {
     id: "RPM-205",
@@ -35,7 +35,7 @@ const mockPatients = [
     status: "Stable",
     hr: 125,
     photo: "https://ui-avatars.com/api/?name=Sarah+J&background=e0f2fe&color=00497d",
-    vitals: { maternalHR: 72, fetalHR: 125, bpSys: 118, bpDia: 78, spo2: 100, contractions: 0 }
+    vitals: { maternalHR: 72, fetalHR: 125, bpSys: 118, bpDia: 78, contractions: 0 }
   },
   {
     id: "RPM-301",
@@ -44,7 +44,7 @@ const mockPatients = [
     status: "Stable",
     hr: 130,
     photo: "https://ui-avatars.com/api/?name=Elena+M&background=dcfce7&color=047857",
-    vitals: { maternalHR: 68, fetalHR: 130, bpSys: 115, bpDia: 75, spo2: 99, contractions: 0 }
+    vitals: { maternalHR: 68, fetalHR: 130, bpSys: 115, bpDia: 75, contractions: 0 }
   }
 ];
 
@@ -105,7 +105,6 @@ async function getPatientsFromSqlite() {
 
         let maternalHR = 72;
         let fetalHR = 135;
-        let spo2 = 99;
         let contractions = 0;
 
         if (vitalsLogs.length > 0) {
@@ -128,7 +127,6 @@ async function getPatientsFromSqlite() {
             fetalHR,
             bpSys,
             bpDia,
-            spo2,
             contractions
           }
         });
@@ -152,7 +150,9 @@ app.post('/login', (req, res) => {
 app.get('/patients', async (req, res) => {
   try {
     const realPatients = await getPatientsFromSqlite();
-    const allPatients = [...realPatients, ...mockPatients];
+    const realIds = new Set(realPatients.map(p => p.id));
+    const filteredMock = mockPatients.filter(p => !realIds.has(p.id));
+    const allPatients = [...realPatients, ...filteredMock];
     res.send(allPatients);
   } catch (err) {
     res.status(500).send({ error: err.message });

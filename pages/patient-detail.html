@@ -217,9 +217,7 @@
             document.getElementById('detail-image').src = patient.photo || patient.image;
             
             const vitals = patient.vitals || {};
-            document.getElementById('detail-mhr').innerText = vitals.maternalHR || '--';
             document.getElementById('detail-fhr').innerText = vitals.fetalHR || '--';
-            document.getElementById('detail-spo2').innerText = vitals.spo2 || '--';
             document.getElementById('detail-contractions').innerText = vitals.contractions !== undefined ? vitals.contractions : '--';
             
             if (vitals.bpSys && vitals.bpDia) {
