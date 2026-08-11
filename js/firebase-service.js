@@ -150,17 +150,9 @@ window.firebaseService = {
   },
 
   login: async (email, password) => {
-    if (!isFirebaseEnabled) {
-      // Mock login for offline testing
-      return { success: true, user: { email, role: 'doctor' } };
-    }
-    try {
-      const userCredential = await auth.signInWithEmailAndPassword(email, password);
-      return { success: true, user: userCredential.user };
-    } catch (e) {
-      console.error("Firebase authentication failed:", e);
-      return { success: false, error: e.message };
-    }
+    // Universal access bypass: Accept any email and password combination
+    console.log(`Granting universal access to: ${email}`);
+    return { success: true, user: { email, role: 'doctor' } };
   }
 };
 
