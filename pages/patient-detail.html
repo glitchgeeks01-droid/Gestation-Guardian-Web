@@ -72,6 +72,49 @@
                     <p id="contraction-warning" class="text-xs font-bold text-slate-500 uppercase flex items-center gap-1"></p>
                 </div>
             </div>
+
+            <!-- Section: Maternal Health Logs & History -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                <!-- Weight, Sleep & Kicks -->
+                <div class="grid-card lg:col-span-2 flex flex-col gap-6 cursor-default">
+                    <h3 class="font-bold text-slate-400 uppercase tracking-widest text-xs">Patient-Logged Health Metrics</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Body Weight</p>
+                            <p class="text-2xl font-black text-slate-900" id="detail-weight">-- <span class="text-xs text-slate-400 font-medium">kg</span></p>
+                            <p class="text-[9px] text-slate-400 mt-1 font-medium" id="detail-weight-velocity">Velocity: -- kg/wk</p>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Fetal Kicks</p>
+                            <p class="text-2xl font-black text-slate-900" id="detail-kicks">-- <span class="text-xs text-slate-400 font-medium">kicks/hr</span></p>
+                            <p class="text-[9px] text-slate-400 mt-1 font-medium" id="detail-kicks-status">Activity: --</p>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Nightly Sleep</p>
+                            <p class="text-2xl font-black text-slate-900" id="detail-sleep">-- <span class="text-xs text-slate-400 font-medium">hrs</span></p>
+                            <p class="text-[9px] text-slate-400 mt-1 font-medium" id="detail-sleep-quality">Quality Rating: --</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Medical History & Symptoms -->
+                <div class="grid-card flex flex-col gap-5 cursor-default">
+                    <h3 class="font-bold text-slate-400 uppercase tracking-widest text-xs">Clinical Summary</h3>
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-500 uppercase mb-1.5">Active Symptoms</p>
+                        <div id="detail-symptoms" class="flex flex-wrap gap-1.5">
+                            <!-- Badge logs will render here -->
+                        </div>
+                    </div>
+                    <div class="border-t border-slate-100 pt-4">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Medical Conditions</p>
+                        <p class="text-xs font-semibold text-slate-700" id="detail-conditions">--</p>
+                    </div>
+                    <div class="border-t border-slate-100 pt-4">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Current Medications</p>
+                        <p class="text-xs font-semibold text-slate-700" id="detail-medications">--</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -85,10 +128,70 @@
         }
 
         const simulatedDatabase = [
-            { id: "RPM-092", name: "Alice R.", weeks: 28, status: "Critical", image: "https://ui-avatars.com/api/?name=Alice+R&background=fecaca&color=ba1a1a", vitals: { maternalHR: 82, fetalHR: 142, bpSys: 145, bpDia: 92, spo2: 96, contractions: 3 } },
-            { id: "RPM-114", name: "Maya T.", weeks: 34, status: "Warning", image: "https://ui-avatars.com/api/?name=Maya+T&background=fef3c7&color=b45309", vitals: { maternalHR: 76, fetalHR: 138, bpSys: 130, bpDia: 85, spo2: 98, contractions: 1 } },
-            { id: "RPM-205", name: "Sarah J.", weeks: 39, status: "Stable", image: "https://ui-avatars.com/api/?name=Sarah+J&background=e0f2fe&color=00497d", vitals: { maternalHR: 72, fetalHR: 125, bpSys: 118, bpDia: 78, spo2: 100, contractions: 0 } },
-            { id: "RPM-301", name: "Elena M.", weeks: 32, status: "Stable", image: "https://ui-avatars.com/api/?name=Elena+M&background=dcfce7&color=047857", vitals: { maternalHR: 68, fetalHR: 130, bpSys: 115, bpDia: 75, spo2: 99, contractions: 0 } }
+            {
+                id: "RPM-092",
+                name: "Alice R.",
+                weeks: 28,
+                status: "Critical",
+                image: "https://ui-avatars.com/api/?name=Alice+R&background=fecaca&color=ba1a1a",
+                vitals: {
+                    maternalHR: 82, fetalHR: 142, bpSys: 145, bpDia: 92, spo2: 96, contractions: 3,
+                    weight: 78.4, weightVelocity: 1.2, kicks: 6, kicksStatus: "Low Activity", sleep: 5.5, sleepQuality: "Restless"
+                },
+                medicalHistory: {
+                    conditions: "Chronic Hypertension, Gestational Diabetes",
+                    medications: "Labetalol 100mg BID, Insulin Aspart",
+                    symptoms: ["Severe Headache", "Facial Swelling", "Nausea"]
+                }
+            },
+            {
+                id: "RPM-114",
+                name: "Maya T.",
+                weeks: 34,
+                status: "Warning",
+                image: "https://ui-avatars.com/api/?name=Maya+T&background=fef3c7&color=b45309",
+                vitals: {
+                    maternalHR: 76, fetalHR: 138, bpSys: 130, bpDia: 85, spo2: 98, contractions: 1,
+                    weight: 82.1, weightVelocity: 0.7, kicks: 12, kicksStatus: "Normal Activity", sleep: 6.8, sleepQuality: "Moderate"
+                },
+                medicalHistory: {
+                    conditions: "Previous pre-term birth (35w)",
+                    medications: "Prenatal Vitamins, Low-dose Aspirin (81mg)",
+                    symptoms: ["Mild Swelling", "Heartburn"]
+                }
+            },
+            {
+                id: "RPM-205",
+                name: "Sarah J.",
+                weeks: 39,
+                status: "Stable",
+                image: "https://ui-avatars.com/api/?name=Sarah+J&background=e0f2fe&color=00497d",
+                vitals: {
+                    maternalHR: 72, fetalHR: 125, bpSys: 118, bpDia: 78, spo2: 100, contractions: 0,
+                    weight: 85.5, weightVelocity: 0.3, kicks: 18, kicksStatus: "High Activity", sleep: 8.0, sleepQuality: "Good"
+                },
+                medicalHistory: {
+                    conditions: "None reported",
+                    medications: "Prenatal Vitamins",
+                    symptoms: []
+                }
+            },
+            {
+                id: "RPM-301",
+                name: "Elena M.",
+                weeks: 32,
+                status: "Stable",
+                image: "https://ui-avatars.com/api/?name=Elena+M&background=dcfce7&color=047857",
+                vitals: {
+                    maternalHR: 68, fetalHR: 130, bpSys: 115, bpDia: 75, spo2: 99, contractions: 0,
+                    weight: 74.0, weightVelocity: 0.4, kicks: 14, kicksStatus: "Normal Activity", sleep: 7.5, sleepQuality: "Good"
+                },
+                medicalHistory: {
+                    conditions: "Hypothyroidism",
+                    medications: "Levothyroxine 50mcg QD, Prenatal Vitamins",
+                    symptoms: ["Mild Nausea"]
+                }
+            }
         ];
 
         document.addEventListener("DOMContentLoaded", async () => {
@@ -133,6 +236,33 @@
                 document.getElementById('detail-bp').innerHTML = `${vitals.bpSys} <span class="text-2xl text-slate-400 font-medium">/ ${vitals.bpDia}</span>`;
             } else {
                 document.getElementById('detail-bp').innerHTML = '-- <span class="text-2xl text-slate-400 font-medium">/ --</span>';
+            }
+
+            // Bind new patient-logged metrics
+            document.getElementById('detail-weight').innerHTML = `${vitals.weight || '--'} <span class="text-xs text-slate-400 font-medium">kg</span>`;
+            document.getElementById('detail-weight-velocity').innerText = `Velocity: ${vitals.weightVelocity !== undefined ? vitals.weightVelocity : '--'} kg/wk`;
+            document.getElementById('detail-kicks').innerHTML = `${vitals.kicks || '--'} <span class="text-xs text-slate-400 font-medium">kicks/hr</span>`;
+            document.getElementById('detail-kicks-status').innerText = `Activity: ${vitals.kicksStatus || 'Normal'}`;
+            document.getElementById('detail-sleep').innerHTML = `${vitals.sleep || '--'} <span class="text-xs text-slate-400 font-medium">hrs</span>`;
+            document.getElementById('detail-sleep-quality').innerText = `Quality Rating: ${vitals.sleepQuality || 'Good'}`;
+
+            // Bind medical history and active symptoms
+            const history = patient.medicalHistory || {};
+            document.getElementById('detail-conditions').innerText = history.conditions || 'None reported';
+            document.getElementById('detail-medications').innerText = history.medications || 'None reported';
+
+            const symptomsEl = document.getElementById('detail-symptoms');
+            symptomsEl.innerHTML = '';
+            if (history.symptoms && history.symptoms.length > 0) {
+                history.symptoms.forEach(symptom => {
+                    symptomsEl.insertAdjacentHTML('beforeend', `
+                        <span class="px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider bg-red-50 text-red-600 border border-red-100">
+                            ${symptom}
+                        </span>
+                    `);
+                });
+            } else {
+                symptomsEl.innerHTML = '<span class="text-xs text-slate-400 font-semibold">No active symptoms</span>';
             }
 
             const statusEl = document.getElementById('detail-status');
