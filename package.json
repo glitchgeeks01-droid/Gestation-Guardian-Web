@@ -8,7 +8,8 @@
   },
   "scripts": {
     "build:css": "tailwindcss -i ./src/input.css -o ./css/output.css --minify",
-    "dev": "tailwindcss -i ./src/input.css -o ./css/output.css --watch"
+    "dev": "tailwindcss -i ./src/input.css -o ./css/output.css --watch",
+    "sync": "node js/backend-sync.js"
   },
   "keywords": [],
   "author": "",
