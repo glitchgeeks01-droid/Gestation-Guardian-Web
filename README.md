@@ -1,6 +1,6 @@
-# 🩺 GG Doctor Dashboard - Doctor Oversight Portal
+# 🩺 GG Doctor Dashboard - Clinical Portal
 
-**GG Doctor Dashboard Web** is a clinical oversight portal designed for healthcare providers to track pregnant patients' health metrics in real-time. It is built as a serverless static web application utilizing Firebase.
+**GG Doctor Dashboard** is a dedicated clinical oversight portal designed exclusively for healthcare providers to track pregnant patients' health metrics in real-time, integrating seamlessly with the **Gestation Guardian** maternal ecosystem.
 
 ![Clinical Portal Banner](https://api.dicebear.com/7.x/initials/svg?seed=GGWeb&backgroundColor=00497d&textColor=FFFFFF)
 
@@ -8,51 +8,66 @@
 
 ## 🛠️ Technology Stack
 
-- **Frontend**:
-  - **HTML5 & CSS3**: Styled layout with glassmorphism effects.
-  - **Vanilla JavaScript**: Pure JS ES6+ (no heavy frontend frameworks required).
-  - **Tailwind CSS (CDN)**: Sleek styling engine.
-  - **Chart.js**: Interactive smartwatch telemetry and live vitals graphing.
-- **Backend (Serverless)**:
-  - **Firebase App**: Core initialization.
-  - **Firebase Firestore**: Real-time Firestore database to store and synchronize patient records and telemetry.
-  - **Firebase Authentication**: User credential authorization for clinical practitioners.
+- **Frontend Core**: HTML5, Vanilla JavaScript (ES6+), and Chart.js for live telemetry graphing.
+- **Styling**: **Tailwind CSS v4** (compiled via CLI).
+- **Dual-Backend Architecture**: 
+  - **Firebase Firestore**: Cloud-based real-time synchronization.
+  - **Local SQLite Server**: For offline or locally-synced patient data.
+- **Background Daemon**: Node-cron powered IoT simulator that pushes realistic telemetry updates every 15 minutes.
 
 ---
 
-## 🚀 Setting Up Firebase
+## 🌟 Gestation Guardian Integration
 
-### 1. Create a Firebase Project
-1. Go to the [Firebase Console](https://console.firebase.google.com/).
-2. Create a new project named **GG Doctor Dashboard**.
-3. Enable **Firestore Database** in test or production mode.
-4. Enable **Email/Password sign-in** under Authentication.
-
-### 2. Configure Credentials
-1. Create a Web App within your Firebase project to get the configuration credentials.
-2. Open `js/firebase-config.js` in the codebase.
-3. Replace the placeholder config values with your project's credentials:
-   ```javascript
-   const firebaseConfig = {
-     apiKey: "YOUR_API_KEY",
-     authDomain: "YOUR_AUTH_DOMAIN",
-     projectId: "YOUR_PROJECT_ID",
-     storageBucket: "YOUR_STORAGE_BUCKET",
-     messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-     appId: "YOUR_APP_ID"
-   };
-   ```
-
-### 3. Automatic Seeding (First Run)
-When you launch the app, `firebase-service.js` will detect if your Firestore `patients` collection is empty. If it is, it will **automatically seed** Firestore with the default mock patients (*Alice R.*, *Maya T.*, *Sarah J.*, and *Elena M.*) so you have an active dashboard immediately!
+This dashboard has been highly specialized to focus strictly on maternity-critical telemetry. General RPM (Remote Patient Monitoring) metrics like SpO2 and ECG have been replaced with targeted indicators:
+- **Fetal Heart Rate (FHR)**
+- **Maternal Heart Rate (MHR)**
+- **Blood Pressure (BP)**
+- **Uterine Activity (Contractions / 10m)**
 
 ---
 
-## 💻 Running the App Locally
+## 🚀 Setting Up the Dual-Backend
 
-Since the backend is fully serverless with Firebase, you do not need to run a local Node/Express server anymore! Simply serve the static HTML folder:
+The dashboard is equipped to connect to Gestation Guardian using two different methods:
+
+### 1. Cloud Connection (Firebase Firestore - Recommended)
+1. Configure your Web App credentials inside `js/firebase-config.js`.
+2. Generate a `serviceAccountKey.json` from the Firebase Console.
+3. Place `serviceAccountKey.json` in the root directory of this repository.
+4. When you launch the app, `firebase-service.js` will automatically seed Firestore with mock patients if it detects an empty database.
+
+### 2. Local Sync (SQLite)
+If Gestation Guardian is syncing data locally, you can serve the existing Express server to pull direct SQLite records:
+```bash
+node js/server.js
+```
+*(Runs on port 3001 and reads from the local database).*
+
+---
+
+## 🕒 Live Vitals Sync Daemon (IoT Simulator)
+
+To simulate live, realistic incoming telemetry from the Gestation Guardian mobile app, a backend Node daemon is included. This daemon pushes algorithmic physiological fluctuations (FHR, MHR, BP, and Contractions) to the Firebase database exactly every 15 minutes.
+
+To start the sync server:
+```bash
+npm install
+npm run sync
+```
+*Note: If `serviceAccountKey.json` is missing, the daemon gracefully falls back to "Local Simulation Mode".*
+
+---
+
+## 💻 Running the Dashboard App
+
+To view the frontend dashboard locally, compile the Tailwind styles and start an HTTP server:
 
 ```bash
+# Compile CSS
+npm run build:css
+
+# Serve the Dashboard
 npx http-server -p 8082 -c-1
 ```
 Open your browser and navigate to **`http://localhost:8082/`**.
