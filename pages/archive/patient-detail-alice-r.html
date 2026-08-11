@@ -11,26 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#00497d", "primary-fixed": "#d1e4ff", "primary-container": "#0061a4",
-                        "tertiary": "#084e57", "tertiary-fixed": "#b2ecf7", "secondary": "#535f70",
-                        "secondary-fixed": "#d7e3f8", "error": "#ba1a1a", "error-container": "#ffdad6",
-                        "surface": "#f7f9fe", "surface-container-highest": "#dfe3e8",
-                        "surface-container-lowest": "#ffffff", "surface-container-low": "#f1f4f9",
-                        "on-surface": "#181c20", "outline": "#717782", "outline-variant": "#c1c7d2",
-                        "on-surface-variant": "#414750", "tertiary-container": "#2b666f"
-                    },
-                    fontFamily: { headline: ["Manrope"], body: ["Inter"], label: ["Inter"] }
-                }
-            }
-        }
-    </script>
-    <style>
+        <style>
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
         body { font-family: 'Inter', sans-serif; }
         h1, h2, h3, .font-headline { font-family: 'Manrope', sans-serif; }
@@ -56,6 +37,7 @@
         }
         .bg-surface { background: #f0f4f9 !important; }
     </style>
+    <link href="../../css/output.css" rel="stylesheet">
 </head>
 <body class="bg-surface text-on-surface flex overflow-hidden selection:bg-primary-fixed selection:text-[#001d36]">
     <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden">
