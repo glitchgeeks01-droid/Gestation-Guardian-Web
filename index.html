@@ -127,7 +127,7 @@
 
 <script>
 let activePatients = [];
-let currentFilter='All', searchTerm='', ecgRaf=null;
+let currentFilter='All', searchTerm='';
 
 async function fetchAndRender() {
   const countNum = document.getElementById('count-num');
@@ -207,7 +207,7 @@ function renderDashboard(){
           <div class="bg-slate-50 p-3 rounded-xl border border-slate-100"><p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1 flex items-center gap-1"><span class="material-symbols-outlined text-[12px] heart-pulse-mom" style="font-variation-settings:'FILL' 1">favorite</span>Maternal HR</p><p class="text-lg font-black text-slate-900"><span class="mhr-val">${vitals.maternalHR || '--'}</span> <span class="text-[9px] text-slate-400">BPM</span></p></div>
           <div class="${fb} p-3 rounded-xl border"><p class="text-[9px] font-bold text-red-400 uppercase tracking-tighter mb-1 flex items-center gap-1"><span class="material-symbols-outlined text-[12px] heart-pulse-baby" style="font-variation-settings:'FILL' 1">child_care</span>Fetal HR</p><p class="text-lg font-black ${ft}"><span class="fhr-val">${vitals.fetalHR || '--'}</span> <span class="text-[9px] text-slate-400">BPM</span></p></div>
           <div class="bg-slate-50 p-3 rounded-xl border border-slate-100"><p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1">Blood Pressure</p><p class="text-sm font-black text-slate-900">${vitals.bpSys || '--'}/<span class="text-slate-500">${vitals.bpDia || '--'}</span> <span class="text-[9px] text-slate-400">mmHg</span></p></div>
-          <div class="bg-sky-50/50 p-3 rounded-xl border border-sky-100"><p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1">SpO₂</p><p class="text-lg font-black text-sky-700">${vitals.spo2 || '--'}<span class="text-[9px] text-slate-400">%</span></p></div>
+          <div class="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100"><p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1">Contractions</p><p class="text-lg font-black text-indigo-700">${vitals.contractions || '--'}<span class="text-[9px] text-slate-400">/10m</span></p></div>
         </div>
       </div>`);
   });
@@ -228,47 +228,19 @@ function openIntervention(id){
   document.getElementById('panel-mhr').innerText=vitals.maternalHR || '--';
   document.getElementById('panel-fhr').innerText=vitals.fetalHR || '--';
   document.getElementById('panel-bp').innerText=(vitals.bpSys || '--')+'/'+(vitals.bpDia || '--');
-  document.getElementById('panel-spo2').innerText=(vitals.spo2 || '--')+'%';
+  document.getElementById('panel-contractions').innerText=(vitals.contractions || '--');
   
   const st=document.getElementById('panel-status');
   st.innerText=p.status || 'Stable';
   st.className= (p.status==='Critical' || p.status==='Red') ?'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-error text-white': (p.status==='Warning' || p.status==='Amber') ?'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-amber-500 text-white':'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-500 text-white';
   document.getElementById('view-details-btn').onclick=()=>window.location.href=`pages/patient-detail.html?id=${p.id}`;
   document.getElementById('side-panel').classList.remove('translate-x-full');
-  startECG(p.status);
+  
 }
 
 function closePanel(){
   document.getElementById('side-panel').classList.add('translate-x-full');
   if(ecgRaf){cancelAnimationFrame(ecgRaf);ecgRaf=null;}
-}
-
-function startECG(status){
-  if(ecgRaf){cancelAnimationFrame(ecgRaf);ecgRaf=null;}
-  const canvas=document.getElementById('ecg-canvas');
-  const ctx=canvas.getContext('2d');
-  canvas.width=canvas.offsetWidth||400;
-  const W=canvas.width,H=canvas.height;
-  const color= (status==='Critical' || status==='Red') ?'#ef4444': (status==='Warning' || status==='Amber') ?'#f59e0b':'#34d399';
-  let offset=0;
-  const ecgPoints=[0,0,0,0,-3,15,-8,30,10,-5,0,0,0,0,0,0,0,0,0,0];
-  const seg=ecgPoints.length;
-  function draw(){
-    ctx.fillStyle='#0f172a';ctx.fillRect(0,0,W,H);
-    ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=1.5;
-    for(let x=0;x<W;x++){
-      const i=Math.floor((x+offset)%seg);
-      const y=H/2-ecgPoints[i];
-      x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
-    }
-    ctx.stroke();
-    // Scan line
-    const scanX=(W-offset%W+W)%W;
-    ctx.fillStyle='rgba(15,23,42,0.8)';ctx.fillRect(scanX,0,12,H);
-    offset=(offset+1.5)%seg;
-    ecgRaf=requestAnimationFrame(draw);
-  }
-  draw();
 }
 
 // IoT sim
