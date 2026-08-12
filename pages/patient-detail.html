@@ -31,9 +31,10 @@
                 <div class="flex items-center gap-6">
                     <img id="detail-image" src="" class="w-24 h-24 rounded-3xl object-cover ring-4 ring-slate-100 shadow-lg">
                     <div>
-                        <div class="flex items-center gap-3 mb-2">
+                        <div class="flex items-center gap-3 mb-2 flex-wrap">
                             <h2 class="text-4xl font-black text-slate-900 tracking-tight font-headline" id="detail-name">Loading...</h2>
                             <span id="detail-status" class="px-3 py-1 rounded-md text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm"></span>
+                            <span id="detail-gestosis-badge" class="px-3 py-1 rounded-md text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm"></span>
                         </div>
                         <p class="text-slate-500 font-bold tracking-widest uppercase text-sm">ID: <span id="detail-id"></span> • <span class="text-primary" id="detail-weeks"></span></p>
                     </div>
@@ -88,22 +89,38 @@
                         </div>
                     </div>
                 </div>
-                <!-- Medical History & Symptoms -->
-                <div class="grid-card flex flex-col gap-5 cursor-default">
-                    <h3 class="font-bold text-slate-400 uppercase tracking-widest text-xs">Clinical Summary</h3>
-                    <div>
-                        <p class="text-[10px] font-bold text-slate-500 uppercase mb-1.5">Active Symptoms</p>
-                        <div id="detail-symptoms" class="flex flex-wrap gap-1.5">
-                            <!-- Badge logs will render here -->
+                <!-- Right Column (Gestosis Risk + Medical History) -->
+                <div class="flex flex-col gap-6">
+                    <!-- Gestosis Risk Score Card -->
+                    <div id="detail-gestosis-card" class="grid-card flex flex-col gap-4 border relative overflow-hidden cursor-default">
+                        <h3 class="font-bold text-slate-400 uppercase tracking-widest text-xs">Gestosis Risk Assessment</h3>
+                        <div class="flex justify-between items-end">
+                            <div>
+                                <p class="text-3xl font-black text-slate-900" id="detail-gestosis-score">--</p>
+                                <p class="text-[10px] font-bold uppercase tracking-widest mt-1.5" id="detail-gestosis-band">--</p>
+                            </div>
+                            <span id="detail-gestosis-icon" class="material-symbols-outlined text-4xl text-slate-400">shield_heart</span>
                         </div>
+                        <p class="text-xs text-slate-500 font-medium border-t border-slate-100 pt-3" id="detail-gestosis-action">--</p>
                     </div>
-                    <div class="border-t border-slate-100 pt-4">
-                        <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Medical Conditions</p>
-                        <p class="text-xs font-semibold text-slate-700" id="detail-conditions">--</p>
-                    </div>
-                    <div class="border-t border-slate-100 pt-4">
-                        <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Current Medications</p>
-                        <p class="text-xs font-semibold text-slate-700" id="detail-medications">--</p>
+
+                    <!-- Medical History & Symptoms -->
+                    <div class="grid-card flex flex-col gap-5 cursor-default">
+                        <h3 class="font-bold text-slate-400 uppercase tracking-widest text-xs">Clinical Summary</h3>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-500 uppercase mb-1.5">Active Symptoms</p>
+                            <div id="detail-symptoms" class="flex flex-wrap gap-1.5">
+                                <!-- Badge logs will render here -->
+                            </div>
+                        </div>
+                        <div class="border-t border-slate-100 pt-4">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Medical Conditions</p>
+                            <p class="text-xs font-semibold text-slate-700" id="detail-conditions">--</p>
+                        </div>
+                        <div class="border-t border-slate-100 pt-4">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Current Medications</p>
+                            <p class="text-xs font-semibold text-slate-700" id="detail-medications">--</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -126,8 +143,9 @@
                 weeks: 28,
                 status: "Critical",
                 image: "https://ui-avatars.com/api/?name=Alice+R&background=fecaca&color=ba1a1a",
+                gestosisScore: 13,
                 vitals: {
-                    maternalHR: 82, fetalHR: 142, bpSys: 145, bpDia: 92, spo2: 96, contractions: 3,
+                    maternalHR: 82, fetalHR: 142, bpSys: 145, bpDia: 92, contractions: 3,
                     weight: 78.4, weightVelocity: 1.2, kicks: 6, kicksStatus: "Low Activity", sleep: 5.5, sleepQuality: "Restless"
                 },
                 medicalHistory: {
@@ -142,8 +160,9 @@
                 weeks: 34,
                 status: "Warning",
                 image: "https://ui-avatars.com/api/?name=Maya+T&background=fef3c7&color=b45309",
+                gestosisScore: 6,
                 vitals: {
-                    maternalHR: 76, fetalHR: 138, bpSys: 130, bpDia: 85, spo2: 98, contractions: 1,
+                    maternalHR: 76, fetalHR: 138, bpSys: 130, bpDia: 85, contractions: 1,
                     weight: 82.1, weightVelocity: 0.7, kicks: 12, kicksStatus: "Normal Activity", sleep: 6.8, sleepQuality: "Moderate"
                 },
                 medicalHistory: {
@@ -158,8 +177,9 @@
                 weeks: 39,
                 status: "Stable",
                 image: "https://ui-avatars.com/api/?name=Sarah+J&background=e0f2fe&color=00497d",
+                gestosisScore: 1,
                 vitals: {
-                    maternalHR: 72, fetalHR: 125, bpSys: 118, bpDia: 78, spo2: 100, contractions: 0,
+                    maternalHR: 72, fetalHR: 125, bpSys: 118, bpDia: 78, contractions: 0,
                     weight: 85.5, weightVelocity: 0.3, kicks: 18, kicksStatus: "High Activity", sleep: 8.0, sleepQuality: "Good"
                 },
                 medicalHistory: {
@@ -174,8 +194,9 @@
                 weeks: 32,
                 status: "Stable",
                 image: "https://ui-avatars.com/api/?name=Elena+M&background=dcfce7&color=047857",
+                gestosisScore: 2,
                 vitals: {
-                    maternalHR: 68, fetalHR: 130, bpSys: 115, bpDia: 75, spo2: 99, contractions: 0,
+                    maternalHR: 68, fetalHR: 130, bpSys: 115, bpDia: 75, contractions: 0,
                     weight: 74.0, weightVelocity: 0.4, kicks: 14, kicksStatus: "Normal Activity", sleep: 7.5, sleepQuality: "Good"
                 },
                 medicalHistory: {
@@ -257,11 +278,33 @@
 
             const statusEl = document.getElementById('detail-status');
             statusEl.innerText = patient.status;
+
+            // Calculate and Bind Gestosis Score
+            const score = window.firebaseService.calculateGestosisScore(patient);
+            const risk = window.firebaseService.getGestosisRiskInfo(score);
+            
+            const gestosisBadge = document.getElementById('detail-gestosis-badge');
+            gestosisBadge.innerText = `Gestosis: ${score} pts`;
+            
+            document.getElementById('detail-gestosis-score').innerHTML = `${score} <span class="text-xs font-medium text-slate-400">pts</span>`;
+            document.getElementById('detail-gestosis-band').innerText = `${risk.band} Gestosis Risk`;
+            document.getElementById('detail-gestosis-action').innerText = risk.action;
+            
+            const gestosisCard = document.getElementById('detail-gestosis-card');
+            gestosisCard.className = `grid-card flex flex-col gap-4 border relative overflow-hidden cursor-default ${risk.bgColor} ${risk.borderClass}`;
             
             // Clean up styling classes first
             document.getElementById('bp-card').className = 'grid-card text-slate-900 border border-slate-200 relative overflow-hidden hover:shadow-lg group';
             document.getElementById('fhr-card').className = 'grid-card border border-slate-200 hover:shadow-lg hover:border-red-300 group relative';
             document.getElementById('detail-fhr-text').className = 'text-5xl font-black mb-2';
+
+            if (score > 12) {
+                gestosisBadge.className = 'bg-red-50 text-red-700 px-3 py-1 rounded-md text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm border border-red-100';
+            } else if (score > 5) {
+                gestosisBadge.className = 'bg-amber-50 text-amber-700 px-3 py-1 rounded-md text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm border border-amber-100';
+            } else {
+                gestosisBadge.className = 'bg-emerald-50 text-emerald-700 px-3 py-1 rounded-md text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm border border-emerald-100';
+            }
 
             if (patient.status === 'Critical' || patient.status === 'Red') {
                 statusEl.className = 'bg-error/10 text-error px-3 py-1 rounded-md text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm';

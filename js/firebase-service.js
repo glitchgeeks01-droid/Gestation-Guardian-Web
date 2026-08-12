@@ -13,6 +13,7 @@ const mockPatients = [
     status: "Critical",
     hr: 142,
     photo: "https://ui-avatars.com/api/?name=Alice+R&background=fecaca&color=ba1a1a",
+    gestosisScore: 13,
     vitals: {
       maternalHR: 82, fetalHR: 142, bpSys: 145, bpDia: 92, contractions: 3,
       weight: 78.4, weightVelocity: 1.2, kicks: 6, kicksStatus: "Low Activity", sleep: 5.5, sleepQuality: "Restless"
@@ -30,6 +31,7 @@ const mockPatients = [
     status: "Warning",
     hr: 138,
     photo: "https://ui-avatars.com/api/?name=Maya+T&background=fef3c7&color=b45309",
+    gestosisScore: 6,
     vitals: {
       maternalHR: 76, fetalHR: 138, bpSys: 130, bpDia: 85, contractions: 1,
       weight: 82.1, weightVelocity: 0.7, kicks: 12, kicksStatus: "Normal Activity", sleep: 6.8, sleepQuality: "Moderate"
@@ -47,6 +49,7 @@ const mockPatients = [
     status: "Stable",
     hr: 125,
     photo: "https://ui-avatars.com/api/?name=Sarah+J&background=e0f2fe&color=00497d",
+    gestosisScore: 1,
     vitals: {
       maternalHR: 72, fetalHR: 125, bpSys: 118, bpDia: 78, contractions: 0,
       weight: 85.5, weightVelocity: 0.3, kicks: 18, kicksStatus: "High Activity", sleep: 8.0, sleepQuality: "Good"
@@ -64,6 +67,7 @@ const mockPatients = [
     status: "Stable",
     hr: 130,
     photo: "https://ui-avatars.com/api/?name=Elena+M&background=dcfce7&color=047857",
+    gestosisScore: 2,
     vitals: {
       maternalHR: 68, fetalHR: 130, bpSys: 115, bpDia: 75, contractions: 0,
       weight: 74.0, weightVelocity: 0.4, kicks: 14, kicksStatus: "Normal Activity", sleep: 7.5, sleepQuality: "Good"
@@ -153,6 +157,70 @@ window.firebaseService = {
     // Universal access bypass: Accept any email and password combination
     console.log(`Granting universal access to: ${email}`);
     return { success: true, user: { email, role: 'doctor' } };
+  },
+
+  calculateGestosisScore: (patient) => {
+    if (!patient) return 0;
+    if (patient.gestosisScore !== undefined) {
+      return patient.gestosisScore;
+    }
+    let score = 0;
+    const history = patient.medicalHistory || {};
+    const vitals = patient.vitals || {};
+    
+    if (patient.age && (patient.age < 20 || patient.age > 35)) {
+      score += 2;
+    }
+    
+    const conditions = (history.conditions || "").toLowerCase();
+    if (conditions.includes("first pregnancy") || conditions.includes("nulliparity")) score += 2;
+    if (conditions.includes("prior pe") || conditions.includes("preeclampsia")) score += 4;
+    if (conditions.includes("hypertension") || conditions.includes("chronic htn")) score += 3;
+    if (conditions.includes("diabetes") || conditions.includes("gestational diabetes")) score += 2;
+    if (conditions.includes("family history")) score += 2;
+    if (conditions.includes("multiple gestation") || conditions.includes("twins")) score += 2;
+    if (conditions.includes("obesity") || conditions.includes("bmi")) score += 2;
+    
+    if (vitals.bpSys && vitals.bpDia) {
+      if (vitals.bpSys >= 160 || vitals.bpDia >= 110) score += 7;
+      else if (vitals.bpSys >= 140 || vitals.bpDia >= 90) score += 5;
+      else if (vitals.bpSys >= 130 || vitals.bpDia >= 80) score += 2;
+    }
+    
+    if (vitals.protein) {
+      if (vitals.protein === "+3" || vitals.protein === "3plus") score += 6;
+      else if (vitals.protein === "+2" || vitals.protein === "2plus") score += 4;
+      else if (vitals.protein === "+1" || vitals.protein === "1plus") score += 2;
+    }
+    
+    if (vitals.glucose) {
+      if (vitals.glucose >= 200) score += 5;
+      else if (vitals.glucose >= 140) score += 3;
+      else if (vitals.glucose < 60) score += 4;
+    }
+    
+    const symptoms = history.symptoms || [];
+    symptoms.forEach(s => {
+      const sl = s.toLowerCase();
+      if (sl.includes("headache")) score += 2;
+      if (sl.includes("vision") || sl.includes("visual")) score += 2;
+      if (sl.includes("pain") || sl.includes("epigastric")) score += 3;
+      if (sl.includes("swelling") || sl.includes("edema")) score += 1;
+    });
+
+    return score;
+  },
+
+  getGestosisRiskInfo: (score) => {
+    if (score <= 5) {
+      return { band: 'Low', color: '#10b981', textColor: 'text-emerald-700', bgColor: 'bg-emerald-50', borderClass: 'border-emerald-100', action: 'Continue routine monitoring' };
+    } else if (score <= 12) {
+      return { band: 'Moderate', color: '#f59e0b', textColor: 'text-amber-700', bgColor: 'bg-amber-50', borderClass: 'border-amber-100', action: 'Increase BP logging frequency. Mention at next doctor visit.' };
+    } else if (score <= 20) {
+      return { band: 'High', color: '#ba1a1a', textColor: 'text-error', bgColor: 'bg-red-50/50', borderClass: 'border-red-100', action: 'Contact your healthcare provider today for an assessment.' };
+    } else {
+      return { band: 'Critical', color: '#ba1a1a', textColor: 'text-error', bgColor: 'bg-red-100', borderClass: 'border-red-200', action: 'EMERGENCY: Proceed to the nearest hospital immediately.' };
+    }
   }
 };
 

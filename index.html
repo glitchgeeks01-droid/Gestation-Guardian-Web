@@ -91,6 +91,17 @@
         </div>
       </div>
 
+      <!-- Gestosis Score Banner -->
+      <div id="panel-gestosis-banner" class="mb-5 p-4 rounded-2xl flex justify-between items-center border">
+        <div>
+          <p class="text-[10px] font-bold uppercase tracking-widest opacity-80" id="panel-gestosis-band">Gestosis Risk Score</p>
+          <p class="text-xs font-semibold mt-1" id="panel-gestosis-action">--</p>
+        </div>
+        <div class="text-right ml-4 shrink-0">
+          <p class="text-3xl font-black" id="panel-gestosis">--</p>
+        </div>
+      </div>
+
       <!-- Vitals 2x2 -->
       <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Current Telemetry</h3>
       <div class="grid grid-cols-2 gap-3 mb-5">
@@ -112,6 +123,20 @@
           <p class="text-3xl font-black text-indigo-700"><span id="panel-contractions">--</span><span class="text-sm font-medium text-indigo-400">/10m</span></p>
         </div>
       </div>
+
+      <!-- Medical History -->
+      <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 mt-6">Medical History & Conditions</h3>
+      <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3 mb-5">
+        <div>
+          <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Conditions</p>
+          <p class="text-xs font-semibold text-slate-700" id="panel-conditions">--</p>
+        </div>
+        <div class="border-t border-slate-200/50 pt-2.5">
+          <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Medications</p>
+          <p class="text-xs font-semibold text-slate-700" id="panel-medications">--</p>
+        </div>
+      </div>
+
       <button id="view-details-btn" class="w-full bg-slate-100 text-primary border border-slate-200 rounded-xl p-4 font-bold flex justify-center items-center gap-2 hover:bg-slate-200 transition-colors shadow-sm">
         <span class="material-symbols-outlined text-[20px]">analytics</span>
         <span class="text-xs tracking-wider uppercase">View Full Clinical Record</span>
@@ -186,13 +211,27 @@ function renderDashboard(){
     const pc= (p.status==='Critical' || p.status==='Red') ?'#ba1a1a': (p.status==='Warning' || p.status==='Amber') ?'#f59e0b':'#10b981';
     const photo = p.photo || p.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=e0f2fe&color=00497d`;
     const vitals = p.vitals || {};
+    
+    const score = window.firebaseService.calculateGestosisScore(p);
+    let riskBadgeColor = 'bg-emerald-50 text-emerald-700 border border-emerald-100';
+    if (score > 12) {
+      riskBadgeColor = 'bg-red-50 text-red-700 border border-red-100';
+    } else if (score > 5) {
+      riskBadgeColor = 'bg-amber-50 text-amber-700 border border-amber-100';
+    }
 
     grid.insertAdjacentHTML('beforeend',`
       <div onclick="openIntervention('${p.id}')" class="patient-card p-7 rounded-[2rem] flex flex-col group hover:-translate-y-1 hover:shadow-xl transition-all">
         <div class="flex justify-between items-start mb-4 w-full">
           <div class="flex gap-4">
             <img src="${photo}" class="w-14 h-14 rounded-2xl object-cover ring-2 ring-slate-100">
-            <div><h3 class="font-headline font-bold text-xl text-slate-900">${p.name}</h3><p class="text-xs text-slate-500 font-medium mt-1">ID: #${p.id}</p></div>
+            <div>
+              <h3 class="font-headline font-bold text-xl text-slate-900">${p.name}</h3>
+              <div class="flex items-center gap-1.5 mt-1">
+                <span class="text-xs text-slate-500 font-medium">ID: #${p.id}</span>
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-black ${riskBadgeColor}">Gestosis: ${score} pts</span>
+              </div>
+            </div>
           </div>
           <span class="${sc} px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm">${pr} ${p.status}</span>
         </div>
@@ -200,11 +239,14 @@ function renderDashboard(){
           <div class="flex justify-between mb-1"><p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Gestation</p><p class="text-[11px] font-black text-slate-600">${p.weeks || '--'} <span class="font-medium text-slate-400">/ 40 wks</span></p></div>
           <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden"><div class="h-full rounded-full" style="width:${pct}%;background:${pc}"></div></div>
         </div>
-        <div class="vitals-grid w-full">
+        <div class="vitals-grid w-full mb-3">
           <div class="bg-slate-50 p-3 rounded-xl border border-slate-100"><p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1 flex items-center gap-1"><span class="material-symbols-outlined text-[12px] heart-pulse-mom" style="font-variation-settings:'FILL' 1">favorite</span>Maternal HR</p><p class="text-lg font-black text-slate-900"><span class="mhr-val">${vitals.maternalHR || '--'}</span> <span class="text-[9px] text-slate-400">BPM</span></p></div>
           <div class="${fb} p-3 rounded-xl border"><p class="text-[9px] font-bold text-red-400 uppercase tracking-tighter mb-1 flex items-center gap-1"><span class="material-symbols-outlined text-[12px] heart-pulse-baby" style="font-variation-settings:'FILL' 1">child_care</span>Fetal HR</p><p class="text-lg font-black ${ft}"><span class="fhr-val">${vitals.fetalHR || '--'}</span> <span class="text-[9px] text-slate-400">BPM</span></p></div>
           <div class="bg-slate-50 p-3 rounded-xl border border-slate-100"><p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1">Blood Pressure</p><p class="text-sm font-black text-slate-900">${vitals.bpSys || '--'}/<span class="text-slate-500">${vitals.bpDia || '--'}</span> <span class="text-[9px] text-slate-400">mmHg</span></p></div>
           <div class="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100"><p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1">Contractions</p><p class="text-lg font-black text-indigo-700">${vitals.contractions || '--'}<span class="text-[9px] text-slate-400">/10m</span></p></div>
+        </div>
+        <div class="text-[11px] text-slate-500 border-t border-slate-100 pt-2.5 flex flex-col gap-1 w-full">
+          <p class="truncate"><span class="font-bold text-slate-400 uppercase text-[9px] tracking-wider mr-1">History:</span> ${p.medicalHistory?.conditions || 'None reported'}</p>
         </div>
       </div>`);
   });
@@ -226,6 +268,22 @@ function openIntervention(id){
   document.getElementById('panel-fhr').innerText=vitals.fetalHR || '--';
   document.getElementById('panel-bp').innerText=(vitals.bpSys || '--')+'/'+(vitals.bpDia || '--');
   document.getElementById('panel-contractions').innerText=(vitals.contractions || '--');
+
+  // Calculate and bind Gestosis Score Info
+  const score = window.firebaseService.calculateGestosisScore(p);
+  const risk = window.firebaseService.getGestosisRiskInfo(score);
+  
+  document.getElementById('panel-gestosis').innerHTML = `${score} <span class="text-xs font-medium opacity-70">pts</span>`;
+  document.getElementById('panel-gestosis-band').innerText = `${risk.band} Gestosis Risk`;
+  document.getElementById('panel-gestosis-action').innerText = risk.action;
+  
+  const banner = document.getElementById('panel-gestosis-banner');
+  banner.className = `mb-5 p-4 rounded-2xl flex justify-between items-center border ${risk.bgColor} ${risk.borderClass} ${risk.textColor}`;
+
+  // Bind Medical History
+  const history = p.medicalHistory || {};
+  document.getElementById('panel-conditions').innerText = history.conditions || 'None reported';
+  document.getElementById('panel-medications').innerText = history.medications || 'None reported';
   
   const st=document.getElementById('panel-status');
   st.innerText=p.status || 'Stable';

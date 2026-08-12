@@ -17,7 +17,13 @@ const mockPatients = [
     status: "Critical",
     hr: 142,
     photo: "https://ui-avatars.com/api/?name=Alice+R&background=fecaca&color=ba1a1a",
-    vitals: { maternalHR: 82, fetalHR: 142, bpSys: 145, bpDia: 92, contractions: 3 }
+    gestosisScore: 13,
+    vitals: { maternalHR: 82, fetalHR: 142, bpSys: 145, bpDia: 92, contractions: 3 },
+    medicalHistory: {
+      conditions: "Chronic Hypertension, Gestational Diabetes",
+      medications: "Labetalol 100mg BID, Insulin Aspart",
+      symptoms: ["Severe Headache", "Facial Swelling", "Nausea"]
+    }
   },
   {
     id: "RPM-114",
@@ -26,7 +32,13 @@ const mockPatients = [
     status: "Warning",
     hr: 138,
     photo: "https://ui-avatars.com/api/?name=Maya+T&background=fef3c7&color=b45309",
-    vitals: { maternalHR: 76, fetalHR: 138, bpSys: 130, bpDia: 85, contractions: 1 }
+    gestosisScore: 6,
+    vitals: { maternalHR: 76, fetalHR: 138, bpSys: 130, bpDia: 85, contractions: 1 },
+    medicalHistory: {
+      conditions: "Previous pre-term birth (35w)",
+      medications: "Prenatal Vitamins, Low-dose Aspirin (81mg)",
+      symptoms: ["Mild Swelling", "Heartburn"]
+    }
   },
   {
     id: "RPM-205",
@@ -35,7 +47,13 @@ const mockPatients = [
     status: "Stable",
     hr: 125,
     photo: "https://ui-avatars.com/api/?name=Sarah+J&background=e0f2fe&color=00497d",
-    vitals: { maternalHR: 72, fetalHR: 125, bpSys: 118, bpDia: 78, contractions: 0 }
+    gestosisScore: 1,
+    vitals: { maternalHR: 72, fetalHR: 125, bpSys: 118, bpDia: 78, contractions: 0 },
+    medicalHistory: {
+      conditions: "None reported",
+      medications: "Prenatal Vitamins",
+      symptoms: []
+    }
   },
   {
     id: "RPM-301",
@@ -44,7 +62,13 @@ const mockPatients = [
     status: "Stable",
     hr: 130,
     photo: "https://ui-avatars.com/api/?name=Elena+M&background=dcfce7&color=047857",
-    vitals: { maternalHR: 68, fetalHR: 130, bpSys: 115, bpDia: 75, contractions: 0 }
+    gestosisScore: 2,
+    vitals: { maternalHR: 68, fetalHR: 130, bpSys: 115, bpDia: 75, contractions: 0 },
+    medicalHistory: {
+      conditions: "Hypothyroidism",
+      medications: "Levothyroxine 50mcg QD, Prenatal Vitamins",
+      symptoms: ["Mild Nausea"]
+    }
   }
 ];
 
