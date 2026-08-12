@@ -32,9 +32,9 @@ try {
 function fluctuateVitals(currentVitals) {
   const newVitals = { ...currentVitals };
   
-  // Fetal HR variance: +/- 5 BPM (normal baseline 110-160)
-  const fhrChange = Math.floor(Math.random() * 11) - 5;
-  newVitals.fetalHR = Math.max(110, Math.min(180, (newVitals.fetalHR || 140) + fhrChange));
+  // Prune legacy fields
+  delete newVitals.fetalHR;
+  delete newVitals.contractions;
   
   // Maternal HR variance: +/- 3 BPM
   const mhrChange = Math.floor(Math.random() * 7) - 3;
@@ -46,12 +46,6 @@ function fluctuateVitals(currentVitals) {
   newVitals.bpSys = Math.max(90, Math.min(180, (newVitals.bpSys || 120) + sysChange));
   newVitals.bpDia = Math.max(60, Math.min(110, (newVitals.bpDia || 80) + diaChange));
 
-  // Contractions (Uterine Activity per 10m): 0 to 5 max, occasional random spikes based on gestation
-  if (Math.random() > 0.7) { // 30% chance to fluctuate
-      const contractionChange = Math.random() > 0.5 ? 1 : -1;
-      newVitals.contractions = Math.max(0, Math.min(6, (newVitals.contractions || 0) + contractionChange));
-  }
-
   return newVitals;
 }
 
@@ -60,7 +54,7 @@ async function syncPatientVitals() {
   
   if (!db) {
     console.log("   -> Local Mode: Simulating vital generation (Database not connected).");
-    console.log("   -> Example Update: Fetal HR +/- 5, BP +/- 2, Contractions adjusted.");
+    console.log("   -> Example Update: Maternal HR +/- 3, BP +/- 2 adjusted.");
     return;
   }
 

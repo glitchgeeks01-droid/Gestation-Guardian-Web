@@ -109,18 +109,10 @@
           <p class="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1 mb-1"><span class="material-symbols-outlined text-[13px] heart-pulse-mom" style="font-variation-settings:'FILL' 1">favorite</span> Maternal HR</p>
           <p class="text-3xl font-black text-slate-900" id="panel-mhr">--</p>
         </div>
-        <div class="p-4 rounded-2xl border border-red-100 bg-red-50/30">
-          <p class="text-[10px] font-bold text-red-400 uppercase flex items-center gap-1 mb-1"><span class="material-symbols-outlined text-[13px] heart-pulse-baby" style="font-variation-settings:'FILL' 1">child_care</span> Fetal HR</p>
-          <p class="text-3xl font-black text-error" id="panel-fhr">--</p>
-        </div>
         <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
           <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Blood Pressure</p>
           <p class="text-xl font-black text-slate-900" id="panel-bp">--/--</p>
           <p class="text-[9px] text-slate-400 font-medium">mmHg</p>
-        </div>
-        <div class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100">
-          <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Contractions</p>
-          <p class="text-3xl font-black text-indigo-700"><span id="panel-contractions">--</span><span class="text-sm font-medium text-indigo-400">/10m</span></p>
         </div>
       </div>
 
@@ -166,11 +158,7 @@ window.filterPatients=function(status){
   if(btn&&map[status]) btn.classList.add(map[status]);
 };
 
-function clearSearch(){
-  document.getElementById('search-input').value='';
-  searchTerm=''; document.getElementById('search-clear').classList.add('hidden');
-  renderDashboard();
-}
+
 
 function renderDashboard(){
   const grid=document.getElementById('patient-grid');
@@ -241,9 +229,7 @@ function renderDashboard(){
         </div>
         <div class="vitals-grid w-full mb-3">
           <div class="bg-slate-50 p-3 rounded-xl border border-slate-100"><p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1 flex items-center gap-1"><span class="material-symbols-outlined text-[12px] heart-pulse-mom" style="font-variation-settings:'FILL' 1">favorite</span>Maternal HR</p><p class="text-lg font-black text-slate-900"><span class="mhr-val">${vitals.maternalHR || '--'}</span> <span class="text-[9px] text-slate-400">BPM</span></p></div>
-          <div class="${fb} p-3 rounded-xl border"><p class="text-[9px] font-bold text-red-400 uppercase tracking-tighter mb-1 flex items-center gap-1"><span class="material-symbols-outlined text-[12px] heart-pulse-baby" style="font-variation-settings:'FILL' 1">child_care</span>Fetal HR</p><p class="text-lg font-black ${ft}"><span class="fhr-val">${vitals.fetalHR || '--'}</span> <span class="text-[9px] text-slate-400">BPM</span></p></div>
           <div class="bg-slate-50 p-3 rounded-xl border border-slate-100"><p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1">Blood Pressure</p><p class="text-sm font-black text-slate-900">${vitals.bpSys || '--'}/<span class="text-slate-500">${vitals.bpDia || '--'}</span> <span class="text-[9px] text-slate-400">mmHg</span></p></div>
-          <div class="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100"><p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1">Contractions</p><p class="text-lg font-black text-indigo-700">${vitals.contractions || '--'}<span class="text-[9px] text-slate-400">/10m</span></p></div>
         </div>
         <div class="text-[11px] text-slate-500 border-t border-slate-100 pt-2.5 flex flex-col gap-1 w-full">
           <p class="truncate"><span class="font-bold text-slate-400 uppercase text-[9px] tracking-wider mr-1">History:</span> ${p.medicalHistory?.conditions || 'None reported'}</p>
@@ -265,9 +251,7 @@ function openIntervention(id){
   
   const vitals = p.vitals || {};
   document.getElementById('panel-mhr').innerText=vitals.maternalHR || '--';
-  document.getElementById('panel-fhr').innerText=vitals.fetalHR || '--';
   document.getElementById('panel-bp').innerText=(vitals.bpSys || '--')+'/'+(vitals.bpDia || '--');
-  document.getElementById('panel-contractions').innerText=(vitals.contractions || '--');
 
   // Calculate and bind Gestosis Score Info
   const score = window.firebaseService.calculateGestosisScore(p);
@@ -297,9 +281,17 @@ function closePanel(){
   document.getElementById('side-panel').classList.add('translate-x-full');
 }
 
+function clearSearch() {
+  const searchInput = document.getElementById('search-input');
+  if (searchInput) searchInput.value = '';
+  searchTerm = '';
+  document.getElementById('search-clear').classList.add('hidden');
+  renderDashboard();
+}
+
 // IoT sim
 setInterval(()=>{
-  document.querySelectorAll('.mhr-val,.fhr-val').forEach(el=>{
+  document.querySelectorAll('.mhr-val').forEach(el=>{
     const v=parseInt(el.innerText);
     if (!isNaN(v)) {
       el.innerText=v+(Math.random()>.5?1:-1);

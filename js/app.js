@@ -52,7 +52,7 @@ function injectMetricNav() {
     const metrics = [
         { file: 'patient-detail',       icon: 'person',           label: 'Overview'      },
         { file: 'blood-pressure-detail',icon: 'sphygmomanometer', label: 'Blood Pressure'},
-        { file: 'heart-rate-detail',    icon: 'watch',            label: 'Smartwatch HR' },
+        { file: 'heart-rate-detail',    icon: 'watch',            label: 'Maternal HR' },
     ];
 
     const tabs = metrics.map(m => {

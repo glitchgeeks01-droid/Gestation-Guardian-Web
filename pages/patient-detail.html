@@ -44,7 +44,7 @@
                 </button>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <!-- Blood Pressure Card -->
                 <div id="bp-card" onclick="routeToDeepDive('blood-pressure-detail.html')" class="grid-card text-slate-900 border border-slate-200 relative overflow-hidden hover:shadow-lg group">
                     <span class="material-symbols-outlined absolute top-4 right-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity z-20">open_in_new</span>
@@ -52,17 +52,11 @@
                     <div class="mt-auto relative z-10"><p class="text-5xl font-black mb-1" id="detail-bp">-- <span class="text-2xl text-slate-400 font-medium">/ --</span></p><p id="bp-warning" class="text-slate-500 font-bold text-sm mt-2 flex items-center gap-1"></p></div>
                 </div>
                 
-                <!-- Fetal HR Baseline Card -->
-                <div id="fhr-card" class="grid-card border border-slate-200 group relative cursor-default">
-                    <h3 class="font-bold text-slate-400 uppercase tracking-widest text-xs flex items-center gap-2 mb-6">Fetal HR Baseline</h3>
-                    <p class="text-5xl font-black mb-2" id="detail-fhr-text"><span id="detail-fhr">--</span> <span class="text-lg text-slate-400 font-medium">BPM</span></p>
-                </div>
-
-                <!-- Uterine Activity Card -->
-                <div class="grid-card border border-slate-200 group relative cursor-default">
-                    <h3 class="font-bold text-slate-400 uppercase tracking-widest text-xs flex items-center gap-2 mb-6">Uterine Activity</h3>
-                    <p class="text-4xl font-black text-slate-900 mb-2"><span id="detail-contractions">--</span> <span class="text-lg text-slate-400 font-medium">/ 10 min</span></p>
-                    <p id="contraction-warning" class="text-xs font-bold text-slate-500 uppercase flex items-center gap-1"></p>
+                <!-- Maternal Heart Rate Card -->
+                <div id="mhr-card" onclick="routeToDeepDive('heart-rate-detail.html')" class="grid-card text-slate-900 border border-slate-200 relative overflow-hidden hover:shadow-lg group">
+                    <span class="material-symbols-outlined absolute top-4 right-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity z-20">open_in_new</span>
+                    <h3 class="font-bold text-slate-400 uppercase tracking-widest text-xs mb-6 relative z-10">Maternal Heart Rate</h3>
+                    <div class="mt-auto relative z-10"><p class="text-5xl font-black mb-1" id="detail-mhr">-- <span class="text-2xl text-slate-400 font-medium">BPM</span></p><p id="mhr-warning" class="text-slate-500 font-bold text-sm mt-2 flex items-center gap-1"></p></div>
                 </div>
             </div>
 
@@ -99,7 +93,7 @@
                                 <p class="text-3xl font-black text-slate-900" id="detail-gestosis-score">--</p>
                                 <p class="text-[10px] font-bold uppercase tracking-widest mt-1.5" id="detail-gestosis-band">--</p>
                             </div>
-                            <span id="detail-gestosis-icon" class="material-symbols-outlined text-4xl text-slate-400">shield_heart</span>
+                            <span id="detail-gestosis-icon" class="material-symbols-outlined text-4xl text-slate-400">shield</span>
                         </div>
                         <p class="text-xs text-slate-500 font-medium border-t border-slate-100 pt-3" id="detail-gestosis-action">--</p>
                     </div>
@@ -145,7 +139,7 @@
                 image: "https://ui-avatars.com/api/?name=Alice+R&background=fecaca&color=ba1a1a",
                 gestosisScore: 13,
                 vitals: {
-                    maternalHR: 82, fetalHR: 142, bpSys: 145, bpDia: 92, contractions: 3,
+                    maternalHR: 82, bpSys: 145, bpDia: 92,
                     weight: 78.4, weightVelocity: 1.2, kicks: 6, kicksStatus: "Low Activity", sleep: 5.5, sleepQuality: "Restless"
                 },
                 medicalHistory: {
@@ -162,7 +156,7 @@
                 image: "https://ui-avatars.com/api/?name=Maya+T&background=fef3c7&color=b45309",
                 gestosisScore: 6,
                 vitals: {
-                    maternalHR: 76, fetalHR: 138, bpSys: 130, bpDia: 85, contractions: 1,
+                    maternalHR: 76, bpSys: 130, bpDia: 85,
                     weight: 82.1, weightVelocity: 0.7, kicks: 12, kicksStatus: "Normal Activity", sleep: 6.8, sleepQuality: "Moderate"
                 },
                 medicalHistory: {
@@ -179,7 +173,7 @@
                 image: "https://ui-avatars.com/api/?name=Sarah+J&background=e0f2fe&color=00497d",
                 gestosisScore: 1,
                 vitals: {
-                    maternalHR: 72, fetalHR: 125, bpSys: 118, bpDia: 78, contractions: 0,
+                    maternalHR: 72, bpSys: 118, bpDia: 78,
                     weight: 85.5, weightVelocity: 0.3, kicks: 18, kicksStatus: "High Activity", sleep: 8.0, sleepQuality: "Good"
                 },
                 medicalHistory: {
@@ -196,7 +190,7 @@
                 image: "https://ui-avatars.com/api/?name=Elena+M&background=dcfce7&color=047857",
                 gestosisScore: 2,
                 vitals: {
-                    maternalHR: 68, fetalHR: 130, bpSys: 115, bpDia: 75, contractions: 0,
+                    maternalHR: 68, bpSys: 115, bpDia: 75,
                     weight: 74.0, weightVelocity: 0.4, kicks: 14, kicksStatus: "Normal Activity", sleep: 7.5, sleepQuality: "Good"
                 },
                 medicalHistory: {
@@ -240,8 +234,7 @@
             document.getElementById('detail-image').src = patient.photo || patient.image;
             
             const vitals = patient.vitals || {};
-            document.getElementById('detail-fhr').innerText = vitals.fetalHR || '--';
-            document.getElementById('detail-contractions').innerText = vitals.contractions !== undefined ? vitals.contractions : '--';
+            document.getElementById('detail-mhr').innerHTML = `${vitals.maternalHR || '--'} <span class="text-2xl text-slate-400 font-medium">BPM</span>`;
             
             if (vitals.bpSys && vitals.bpDia) {
                 document.getElementById('detail-bp').innerHTML = `${vitals.bpSys} <span class="text-2xl text-slate-400 font-medium">/ ${vitals.bpDia}</span>`;
@@ -295,8 +288,7 @@
             
             // Clean up styling classes first
             document.getElementById('bp-card').className = 'grid-card text-slate-900 border border-slate-200 relative overflow-hidden hover:shadow-lg group';
-            document.getElementById('fhr-card').className = 'grid-card border border-slate-200 hover:shadow-lg hover:border-red-300 group relative';
-            document.getElementById('detail-fhr-text').className = 'text-5xl font-black mb-2';
+            document.getElementById('mhr-card').className = 'grid-card text-slate-900 border border-slate-200 relative overflow-hidden hover:shadow-lg group';
 
             if (score > 12) {
                 gestosisBadge.className = 'bg-red-50 text-red-700 px-3 py-1 rounded-md text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm border border-red-100';
@@ -310,22 +302,21 @@
                 statusEl.className = 'bg-error/10 text-error px-3 py-1 rounded-md text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm';
                 document.getElementById('bp-card').classList.add('bg-slate-900', 'text-white');
                 document.getElementById('bp-warning').innerText = "Elevated Risk";
-                document.getElementById('fhr-card').classList.add('bg-red-50/20', 'border-red-200');
-                document.getElementById('detail-fhr-text').classList.add('text-error');
-                document.getElementById('contraction-warning').innerText = "Irregular Detected";
-                document.getElementById('contraction-warning').className = "text-xs font-bold uppercase flex items-center gap-1 text-amber-600";
+                document.getElementById('mhr-card').classList.add('bg-red-50/20', 'border-red-200');
+                document.getElementById('mhr-warning').innerText = "Elevated Pulse";
+                document.getElementById('mhr-warning').className = "text-xs font-bold uppercase flex items-center gap-1 text-red-600";
             } 
             else if (patient.status === 'Warning' || patient.status === 'Amber') {
                 statusEl.className = 'bg-amber-100 text-amber-700 px-3 py-1 rounded-md text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm';
                 document.getElementById('bp-warning').innerText = "Borderline Normal";
-                document.getElementById('contraction-warning').innerText = "Monitor Activity";
-                document.getElementById('contraction-warning').className = "text-xs font-bold uppercase flex items-center gap-1 text-amber-600";
+                document.getElementById('mhr-warning').innerText = "Borderline Normal";
+                document.getElementById('mhr-warning').className = "text-xs font-bold uppercase flex items-center gap-1 text-amber-600";
             } 
             else {
                 statusEl.className = 'bg-emerald-100 text-emerald-700 px-3 py-1 rounded-md text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm';
                 document.getElementById('bp-warning').innerText = "Normal Range";
-                document.getElementById('contraction-warning').innerText = "No Activity Detected";
-                document.getElementById('contraction-warning').className = "text-xs font-bold uppercase flex items-center gap-1 text-slate-500";
+                document.getElementById('mhr-warning').innerText = "Normal Range";
+                document.getElementById('mhr-warning').className = "text-xs font-bold uppercase flex items-center gap-1 text-slate-500";
             }
         });
     </script>

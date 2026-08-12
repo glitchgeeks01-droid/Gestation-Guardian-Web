@@ -70,7 +70,7 @@
                     <div class="absolute inset-y-0 left-6 flex items-center pointer-events-none">
                         <span class="material-symbols-outlined text-outline group-focus-within:text-primary transition-colors">search</span>
                     </div>
-                    <input class="w-full bg-surface-container-highest border-none border-b-2 border-outline-variant/15 focus:ring-0 focus:border-primary focus:glass-card py-6 pl-16 pr-8 rounded-t-2xl text-lg font-body placeholder:text-outline transition-all duration-300 outline-none shadow-sm" placeholder="Search for clinical guides or technical help..." type="text">
+                    <input id="search-input" class="w-full bg-surface-container-highest border-none border-b-2 border-outline-variant/15 focus:ring-0 focus:border-primary focus:glass-card py-6 pl-16 pr-8 rounded-t-2xl text-lg font-body placeholder:text-outline transition-all duration-300 outline-none shadow-sm" placeholder="Search for clinical guides or technical help..." type="text">
                 </div>
             </section>
 
@@ -143,6 +143,26 @@
     </main>
 
     <script src="../js/app.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    const term = e.target.value.toLowerCase();
+                    const cards = document.querySelectorAll('.grid > div');
+                    cards.forEach(card => {
+                        const titleEl = card.querySelector('h3');
+                        const descEl = card.querySelector('p');
+                        if (titleEl && descEl) {
+                            const title = titleEl.textContent.toLowerCase();
+                            const desc = descEl.textContent.toLowerCase();
+                            card.style.display = (title.includes(term) || desc.includes(term)) ? '' : 'none';
+                        }
+                    });
+                });
+            }
+        });
+    </script>
 </body>
 </html>
 

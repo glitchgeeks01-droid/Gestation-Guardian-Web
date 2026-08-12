@@ -41,7 +41,7 @@ async function loadPatientsFromFirebase() {
                     </span>
                 </div>
                 <div class="mt-auto pt-4 border-t border-slate-100 flex justify-between items-center">
-                    <div class="text-sm font-bold text-slate-700">${p.hr || (p.vitals && p.vitals.fetalHR) || '--'} <span class="text-[10px] text-slate-400">BPM</span></div>
+                    <div class="text-sm font-bold text-slate-700">${(p.vitals && p.vitals.maternalHR) || '--'} <span class="text-[10px] text-slate-400">BPM</span></div>
                     <span class="material-symbols-outlined text-[18px] text-primary group-hover:translate-x-1 transition-transform">arrow_forward</span>
                 </div>
             </a>`;
