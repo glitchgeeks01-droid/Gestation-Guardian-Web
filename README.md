@@ -19,11 +19,20 @@
 
 ## 🌟 Gestation Guardian Integration
 
-This dashboard has been highly specialized to focus strictly on maternity-critical telemetry. General RPM (Remote Patient Monitoring) metrics like SpO2 and ECG have been replaced with targeted indicators:
-- **Fetal Heart Rate (FHR)**
+This dashboard has been highly specialized to focus strictly on maternal clinical telemetry:
 - **Maternal Heart Rate (MHR)**
 - **Blood Pressure (BP)**
-- **Uterine Activity (Contractions / 10m)**
+- **Gestosis Risk Scoring**: A dynamic clinical triage helper that parses age, parity, conditions, blood pressure, and symptoms to compute Gestosis risk points, categorizing patients into Low, Moderate, High, and Critical triage bands.
+- **Clinical History Summary**: Visualizes patient-reported conditions, active medications, and symptoms side-by-side with real-time vitals.
+
+General RPM (Remote Patient Monitoring) metrics like SpO2 and ECG, as well as fetal-specific telemetry (Fetal Heart Rate, Contractions), have been stripped from this clinical dashboard to focus clinical providers purely on maternal cardiovascular telemetry and gestational preeclampsia/gestosis risks.
+
+---
+
+## 🔍 Search & Filtering Features
+- **Global Patient Directory**: Quick search by patient name or ID directly on the main dashboard.
+- **Dynamic Telemetry Logs Search**: Fully-wired search boxes in blood pressure and heart rate detail pages let providers search and filter history logs instantly as they type.
+- **Help Center Directory Search**: Allows clinical staff to search guides, integration guides, and tutorials instantly.
 
 ---
 
@@ -48,7 +57,7 @@ node js/server.js
 
 ## 🕒 Live Vitals Sync Daemon (IoT Simulator)
 
-To simulate live, realistic incoming telemetry from the Gestation Guardian mobile app, a backend Node daemon is included. This daemon pushes algorithmic physiological fluctuations (FHR, MHR, BP, and Contractions) to the Firebase database exactly every 15 minutes.
+To simulate live, realistic incoming telemetry from the Gestation Guardian mobile app, a backend Node daemon is included. This daemon pushes algorithmic physiological fluctuations (MHR and BP) to the Firebase database exactly every 15 minutes.
 
 To start the sync server:
 ```bash
