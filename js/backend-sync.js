@@ -50,6 +50,77 @@ function fluctuateVitals(currentVitals) {
   return newVitals;
 }
 
+const mockPatients = [
+  {
+    id: "RPM-092",
+    name: "Alice R.",
+    weeks: 28,
+    status: "Critical",
+    photo: "https://ui-avatars.com/api/?name=Alice+R&background=fecaca&color=ba1a1a",
+    gestosisScore: 13,
+    vitals: {
+      maternalHR: 82, bpSys: 145, bpDia: 92,
+      weight: 78.4, weightVelocity: 1.2, kicks: 6, kicksStatus: "Low Activity", sleep: 5.5, sleepQuality: "Restless"
+    },
+    medicalHistory: {
+      conditions: "Chronic Hypertension, Gestational Diabetes",
+      medications: "Labetalol 100mg BID, Insulin Aspart",
+      symptoms: ["Severe Headache", "Facial Swelling", "Nausea"]
+    }
+  },
+  {
+    id: "RPM-114",
+    name: "Maya T.",
+    weeks: 34,
+    status: "Warning",
+    photo: "https://ui-avatars.com/api/?name=Maya+T&background=fef3c7&color=b45309",
+    gestosisScore: 6,
+    vitals: {
+      maternalHR: 76, bpSys: 130, bpDia: 85,
+      weight: 82.1, weightVelocity: 0.7, kicks: 12, kicksStatus: "Normal Activity", sleep: 6.8, sleepQuality: "Moderate"
+    },
+    medicalHistory: {
+      conditions: "Previous pre-term birth (35w)",
+      medications: "Prenatal Vitamins, Low-dose Aspirin (81mg)",
+      symptoms: ["Mild Swelling", "Heartburn"]
+    }
+  },
+  {
+    id: "RPM-205",
+    name: "Sarah J.",
+    weeks: 39,
+    status: "Stable",
+    photo: "https://ui-avatars.com/api/?name=Sarah+J&background=e0f2fe&color=00497d",
+    gestosisScore: 1,
+    vitals: {
+      maternalHR: 72, bpSys: 118, bpDia: 78,
+      weight: 85.5, weightVelocity: 0.3, kicks: 18, kicksStatus: "High Activity", sleep: 8.0, sleepQuality: "Good"
+    },
+    medicalHistory: {
+      conditions: "None reported",
+      medications: "Prenatal Vitamins",
+      symptoms: []
+    }
+  },
+  {
+    id: "RPM-301",
+    name: "Elena M.",
+    weeks: 32,
+    status: "Stable",
+    photo: "https://ui-avatars.com/api/?name=Elena+M&background=dcfce7&color=047857",
+    gestosisScore: 2,
+    vitals: {
+      maternalHR: 68, bpSys: 115, bpDia: 75,
+      weight: 74.0, weightVelocity: 0.4, kicks: 14, kicksStatus: "Normal Activity", sleep: 7.5, sleepQuality: "Good"
+    },
+    medicalHistory: {
+      conditions: "Hypothyroidism",
+      medications: "Levothyroxine 50mcg QD, Prenatal Vitamins",
+      symptoms: ["Mild Nausea"]
+    }
+  }
+];
+
 async function syncPatientVitals() {
   console.log(`[${new Date().toISOString()}] Executing 15-minute Vitals Sync...`);
   
@@ -61,11 +132,15 @@ async function syncPatientVitals() {
 
   try {
     const patientsRef = db.collection('patients');
-    const snapshot = await patientsRef.get();
+    let snapshot = await patientsRef.get();
     
     if (snapshot.empty) {
-      console.log("   -> No active patients found in Firestore to update.");
-      return;
+      console.log("   -> Firestore is empty. Auto-seeding mock patients...");
+      for (const p of mockPatients) {
+        await patientsRef.doc(p.id).set(p);
+      }
+      console.log("   -> Auto-seeding completed. Fetching new snapshot...");
+      snapshot = await patientsRef.get();
     }
 
     const batch = db.batch();
