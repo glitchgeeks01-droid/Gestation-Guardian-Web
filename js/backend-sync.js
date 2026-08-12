@@ -1,5 +1,6 @@
 require('dotenv').config();
 const admin = require('firebase-admin');
+const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const cron = require('node-cron');
 const fs = require('fs');
 const path = require('path');
@@ -16,9 +17,9 @@ try {
   if (fs.existsSync(serviceAccountPath)) {
     const serviceAccount = require(serviceAccountPath);
     admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
+      credential: admin.cert(serviceAccount)
     });
-    db = admin.firestore();
+    db = getFirestore();
     console.log("🔥 Firebase Admin connected successfully.");
   } else {
     console.warn("⚠️  Warning: 'serviceAccountKey.json' not found in root directory.");
@@ -78,7 +79,7 @@ async function syncPatientVitals() {
         // Update patient document with new vitals and timestamp
         batch.update(doc.ref, { 
             vitals: newVitals,
-            lastSyncedAt: admin.firestore.FieldValue.serverTimestamp()
+            lastSyncedAt: FieldValue.serverTimestamp()
         });
         count++;
       }
