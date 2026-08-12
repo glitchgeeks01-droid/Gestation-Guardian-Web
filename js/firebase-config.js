@@ -2,12 +2,13 @@
 // Replace the placeholder values below with your actual Firebase Project Configuration.
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCdkoux4Sb8Lwep_DkU24P7tn-YlfF7xoI",
+  authDomain: "gg-doctor-dashboard.firebaseapp.com",
+  projectId: "gg-doctor-dashboard",
+  storageBucket: "gg-doctor-dashboard.firebasestorage.app",
+  messagingSenderId: "460198837780",
+  appId: "1:460198837780:web:ac956026c2ae37ddc13101",
+  measurementId: "G-FWDDBD6V8L"
 };
 
 // Export configuration to window for global access
