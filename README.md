@@ -59,6 +59,9 @@ node js/server.js
 
 To simulate live, realistic incoming telemetry from the Gestation Guardian mobile app, a backend Node daemon is included. This daemon pushes algorithmic physiological fluctuations (MHR and BP) to the Firebase database exactly every 15 minutes.
 
+- **Auto-Seeding**: The sync daemon is fully self-healing. If it connects to a fresh, empty Firestore instance, it automatically seeds the database with the default maternal patient templates before initiating telemetry updates.
+- **Admin SDK Compatibility**: Supports modern modular Firebase Admin (v10+) SDK syntax for reliable cloud operations.
+
 To start the sync server:
 ```bash
 npm install

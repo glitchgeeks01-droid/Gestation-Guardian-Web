@@ -48,3 +48,5 @@ vary/
 webidl-conversions/
 whatwg-url/
 wrappy/
+
+serviceAccountKey.json
