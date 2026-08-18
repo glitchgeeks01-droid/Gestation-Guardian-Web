@@ -195,7 +195,7 @@
                         </div>
                     </div>
                     
-                    <button class="w-full bg-gradient-to-r from-primary to-primary-container text-white py-4 px-8 rounded-xl font-bold flex items-center justify-center gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all active:translate-y-0 group">
+                    <button onclick="const id = document.getElementById('patient-id').value; if(id) window.location.href='../index.html?connectId=' + encodeURIComponent(id)" class="w-full bg-gradient-to-r from-primary to-primary-container text-white py-4 px-8 rounded-xl font-bold flex items-center justify-center gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all active:translate-y-0 group">
                         Connect Record
                         <span class="material-symbols-outlined transition-transform group-hover:translate-x-1">arrow_forward</span>
                     </button>

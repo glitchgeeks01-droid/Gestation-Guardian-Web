@@ -4,6 +4,7 @@ const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const cron = require('node-cron');
 const fs = require('fs');
 const path = require('path');
+const mlBaseline = require('./ml-baseline');
 
 console.log("==========================================");
 console.log(" Gestation Guardian Backend Vitals Sync ");
@@ -149,11 +150,30 @@ async function syncPatientVitals() {
     snapshot.forEach(doc => {
       const patient = doc.data();
       if (patient && patient.vitals) {
+        const vitalsHistory = patient.vitalsHistory || [];
+        vitalsHistory.push(patient.vitals);
+        // Keep a reasonable sliding window of history for the baseline, e.g. last 24 readings
+        if (vitalsHistory.length > 24) vitalsHistory.shift();
+
         const newVitals = fluctuateVitals(patient.vitals);
         
+        // Detect anomalies using our ML baseline
+        const isAnomaly = mlBaseline.detectAnomaly(vitalsHistory, newVitals);
+
+        if (isAnomaly) {
+            const riskAssessment = mlBaseline.generateRiskAssessmentFHIR(doc.id, newVitals);
+            const riskRef = db.collection('riskAssessments').doc();
+            batch.set(riskRef, {
+                ...riskAssessment,
+                createdAt: FieldValue.serverTimestamp()
+            });
+            console.log(`   🚨 Anomaly detected for ${doc.id}! Pushed RiskAssessment to Firebase.`);
+        }
+
         // Update patient document with new vitals and timestamp
         batch.update(doc.ref, { 
             vitals: newVitals,
+            vitalsHistory: vitalsHistory,
             lastSyncedAt: FieldValue.serverTimestamp()
         });
         count++;

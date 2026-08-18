@@ -99,11 +99,11 @@ function initFirebase() {
 async function seedFirestoreIfEmpty() {
   if (!isFirebaseEnabled) return;
   try {
-    const snapshot = await db.collection('patients').limit(1).get();
+    const snapshot = await db.collection('users').limit(1).get();
     if (snapshot.empty) {
       console.log("Seeding Firestore with default mock patients...");
       for (const patient of mockPatients) {
-        await db.collection('patients').doc(patient.id).set(patient);
+        await db.collection('users').doc(patient.id).set(patient);
       }
       console.log("Firestore seeding completed.");
     }
@@ -121,7 +121,7 @@ window.firebaseService = {
       return mockPatients;
     }
     try {
-      const snapshot = await db.collection('patients').get();
+      const snapshot = await db.collection('users').get();
       const patients = [];
       snapshot.forEach(doc => {
         patients.push({ id: doc.id, ...doc.data() });
@@ -138,7 +138,7 @@ window.firebaseService = {
       return mockPatients.find(p => p.id === id) || null;
     }
     try {
-      const doc = await db.collection('patients').doc(id).get();
+      const doc = await db.collection('users').doc(id).get();
       if (doc.exists) {
         return { id: doc.id, ...doc.data() };
       }
@@ -153,6 +153,23 @@ window.firebaseService = {
     // Universal access bypass: Accept any email and password combination
     console.log(`Granting universal access to: ${email}`);
     return { success: true, user: { email, role: 'doctor' } };
+  },
+
+  bindPatient: (uniqueId) => {
+    if (!isFirebaseEnabled || !db) return;
+    console.log(`Binding to patient telemetry for ${uniqueId}`);
+    db.collection('users').doc(uniqueId).collection('telemetry')
+      .onSnapshot((snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === 'added' || change.type === 'modified') {
+            const data = change.doc.data();
+            const event = new CustomEvent('telemetryUpdate', { detail: data });
+            window.dispatchEvent(event);
+          }
+        });
+      }, (error) => {
+        console.error("Error listening to telemetry:", error);
+      });
   },
 
   calculateGestosisScore: (patient) => {
