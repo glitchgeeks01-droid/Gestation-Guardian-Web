@@ -3,11 +3,20 @@ const calculateMAP = (bpSys, bpDia) => {
 };
 
 const detectAnomaly = (historicalVitals, currentVitals) => {
-    if (!historicalVitals || historicalVitals.length < 2) {
-        return false; // Not enough history to calculate standard deviation reliably
+    if (!Array.isArray(historicalVitals)) {
+        return false;
     }
 
-    const maps = historicalVitals.map(v => calculateMAP(v.bpSys, v.bpDia));
+    // Filter out historical records that lack valid BP values
+    const validHistory = historicalVitals.filter(v => 
+        v && typeof v.bpSys === 'number' && typeof v.bpDia === 'number'
+    );
+
+    if (validHistory.length < 2) {
+        return false; // Not enough valid history to calculate standard deviation reliably
+    }
+
+    const maps = validHistory.map(v => calculateMAP(v.bpSys, v.bpDia));
     const n = maps.length;
     
     // Calculate moving average (mean)
@@ -17,6 +26,10 @@ const detectAnomaly = (historicalVitals, currentVitals) => {
     // Calculate standard deviation
     const variance = maps.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / n;
     const stdDev = Math.sqrt(variance);
+
+    if (!currentVitals || typeof currentVitals.bpSys !== 'number' || typeof currentVitals.bpDia !== 'number') {
+        return false;
+    }
 
     const currentMAP = calculateMAP(currentVitals.bpSys, currentVitals.bpDia);
 

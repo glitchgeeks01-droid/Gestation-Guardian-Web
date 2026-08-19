@@ -17,11 +17,26 @@ async function loadPatientsFromFirebase() {
             // Dynamic route using the patient's own ID
             const detailUrl = `pages/patient-detail.html?id=${encodeURIComponent(p._id || p.id || '')}`;
 
-            // Normalise status colours (supports 'Critical'/'Red', 'Warning'/'Amber', 'Stable'/'Green')
-            const status = p.status || 'Stable';
-            let statusClass = 'bg-emerald-100 text-emerald-700';
-            if (/critical|red/i.test(status))   statusClass = 'bg-red-100 text-red-700';
-            else if (/warning|amber/i.test(status)) statusClass = 'bg-amber-100 text-amber-700';
+            // Calculate Gestosis Risk Score dynamically to assign RED/AMBER/GREEN risk levels
+            let score = 0;
+            if (window.firebaseService && window.firebaseService.calculateGestosisScore) {
+                score = window.firebaseService.calculateGestosisScore(p);
+            }
+            
+            // Derive Status based on Gestosis Score or explicitly set status
+            let status = p.status || 'Stable';
+            let statusClass = 'bg-emerald-100 text-emerald-700'; // GREEN by default
+
+            if (score >= 13 || /critical|high|red/i.test(p.status)) {
+                status = 'Critical';
+                statusClass = 'bg-red-100 text-red-700 font-bold shadow-sm'; // RED
+            } else if (score >= 6 || /warning|moderate|amber/i.test(p.status)) {
+                status = 'Warning';
+                statusClass = 'bg-amber-100 text-amber-700 font-bold shadow-sm'; // AMBER
+            } else {
+                status = p.status || 'Stable';
+                statusClass = 'bg-emerald-100 text-emerald-700 font-bold shadow-sm'; // GREEN
+            }
 
             const photo = p.photo || p.image ||
                 `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=e2e8f0&color=475569`;

@@ -163,10 +163,7 @@ async function syncPatientVitals() {
         if (isAnomaly) {
             const riskAssessment = mlBaseline.generateRiskAssessmentFHIR(doc.id, newVitals);
             const riskRef = db.collection('riskAssessments').doc();
-            batch.set(riskRef, {
-                ...riskAssessment,
-                createdAt: FieldValue.serverTimestamp()
-            });
+            batch.set(riskRef, riskAssessment);
             console.log(`   🚨 Anomaly detected for ${doc.id}! Pushed RiskAssessment to Firebase.`);
         }
 

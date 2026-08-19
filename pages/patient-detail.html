@@ -270,11 +270,22 @@
             }
 
             const statusEl = document.getElementById('detail-status');
-            statusEl.innerText = patient.status;
-
+            
             // Calculate and Bind Gestosis Score
-            const score = window.firebaseService.calculateGestosisScore(patient);
-            const risk = window.firebaseService.getGestosisRiskInfo(score);
+            const score = window.firebaseService?.calculateGestosisScore ? window.firebaseService.calculateGestosisScore(patient) : (patient.gestosisScore || 0);
+            const risk = (window.firebaseService?.getGestosisRiskInfo ? window.firebaseService.getGestosisRiskInfo(score) : null) || { band: 'Unknown', action: 'N/A', bgColor: 'bg-slate-50', borderClass: 'border-slate-200' };
+            
+            // Derive strict RED/AMBER/GREEN status
+            let computedStatus = patient.status || 'Stable';
+            if (score >= 13 || /critical|high|red/i.test(computedStatus)) {
+                computedStatus = 'Critical';
+            } else if (score >= 6 || /warning|moderate|amber/i.test(computedStatus)) {
+                computedStatus = 'Warning';
+            } else {
+                computedStatus = 'Stable';
+            }
+            
+            statusEl.innerText = computedStatus;
             
             const gestosisBadge = document.getElementById('detail-gestosis-badge');
             gestosisBadge.innerText = `Gestosis: ${score} pts`;
@@ -284,7 +295,7 @@
             document.getElementById('detail-gestosis-action').innerText = risk.action;
             
             const gestosisCard = document.getElementById('detail-gestosis-card');
-            gestosisCard.className = `grid-card flex flex-col gap-4 border relative overflow-hidden cursor-default ${risk.bgColor} ${risk.borderClass}`;
+            gestosisCard.className = `grid-card flex flex-col gap-4 border relative overflow-hidden cursor-default ${risk.bgColor || 'bg-white'} ${risk.borderClass || 'border-slate-200'}`;
             
             // Clean up styling classes first
             document.getElementById('bp-card').className = 'grid-card text-slate-900 border border-slate-200 relative overflow-hidden hover:shadow-lg group';
@@ -298,15 +309,15 @@
                 gestosisBadge.className = 'bg-emerald-50 text-emerald-700 px-3 py-1 rounded-md text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm border border-emerald-100';
             }
 
-            if (patient.status === 'Critical' || patient.status === 'Red') {
-                statusEl.className = 'bg-error/10 text-error px-3 py-1 rounded-md text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm';
+            if (computedStatus === 'Critical') {
+                statusEl.className = 'bg-red-100 text-red-700 px-3 py-1 rounded-md text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm';
                 document.getElementById('bp-card').classList.add('bg-slate-900', 'text-white');
                 document.getElementById('bp-warning').innerText = "Elevated Risk";
                 document.getElementById('mhr-card').classList.add('bg-red-50/20', 'border-red-200');
                 document.getElementById('mhr-warning').innerText = "Elevated Pulse";
                 document.getElementById('mhr-warning').className = "text-xs font-bold uppercase flex items-center gap-1 text-red-600";
             } 
-            else if (patient.status === 'Warning' || patient.status === 'Amber') {
+            else if (computedStatus === 'Warning') {
                 statusEl.className = 'bg-amber-100 text-amber-700 px-3 py-1 rounded-md text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm';
                 document.getElementById('bp-warning').innerText = "Borderline Normal";
                 document.getElementById('mhr-warning').innerText = "Borderline Normal";
