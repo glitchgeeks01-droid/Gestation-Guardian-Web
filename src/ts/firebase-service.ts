@@ -26,7 +26,8 @@ function initFirebase(): void {
 }
 
 // Implement the global interface defined in types.ts
-window.firebaseService = {
+window.firebaseService = window.firebaseService || {} as any;
+Object.assign(window.firebaseService, {
   getIsFirebaseEnabled: (): boolean => isFirebaseEnabled,
   
   getPatients: async (): Promise<PatientRecord[]> => {
@@ -237,7 +238,7 @@ window.firebaseService = {
       return { band: 'Critical', color: '#ba1a1a', textColor: 'text-error', bgColor: 'bg-red-100', borderClass: 'border-red-200', action: 'EMERGENCY: Proceed to the nearest hospital immediately.' };
     }
   }
-};
+});
 
 // Initialise Firebase connection
 if (typeof firebase !== 'undefined') {

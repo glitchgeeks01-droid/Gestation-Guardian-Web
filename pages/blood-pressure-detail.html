@@ -284,6 +284,14 @@
             }
         });
     </script>
+<script>
+    fetch('../components/sidebar.html')
+        .then(res => res.text())
+        .then(html => {
+            document.getElementById('sidebar-target').innerHTML = html;
+        });
+</script>
 </body>
 </html>
+
 
