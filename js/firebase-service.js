@@ -1,3 +1,5 @@
+"use strict";
+// src/ts/firebase-service.ts
 let db = null;
 let auth = null;
 let isFirebaseEnabled = false;
@@ -257,4 +259,3 @@ else {
             initFirebase();
     });
 }
-export {};

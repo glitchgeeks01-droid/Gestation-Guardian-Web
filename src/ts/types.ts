@@ -3,7 +3,7 @@
  * This file enforces Type-Safety across the Frontend, Backend, and Firebase payload definitions.
  */
 
-export interface TelemetryData {
+interface TelemetryData {
     maternalHR?: number;
     bpSys?: number;
     bpDia?: number;
@@ -17,13 +17,13 @@ export interface TelemetryData {
     glucose?: number;
 }
 
-export interface MedicalHistory {
+interface MedicalHistory {
     conditions?: string;
     medications?: string;
     symptoms?: string[];
 }
 
-export interface PatientRecord {
+interface PatientRecord {
     /** 
      * The cryptographically secure Firebase Auth UID. 
      * Used exclusively as the Document ID in Firestore.
@@ -51,7 +51,7 @@ export interface PatientRecord {
 }
 
 // Ensure the global firebaseService window object is fully typed
-declare global {
+
     interface Window {
         firebaseConfig: any;
         firebaseService: {
@@ -71,4 +71,4 @@ declare global {
             };
         };
     }
-}
+

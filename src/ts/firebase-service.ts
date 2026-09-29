@@ -1,5 +1,5 @@
 // src/ts/firebase-service.ts
-import { PatientRecord } from './types';
+
 
 // Global declarations for Firebase loaded via CDN
 declare var firebase: any;
@@ -248,3 +248,4 @@ if (typeof firebase !== 'undefined') {
     if (typeof firebase !== 'undefined') initFirebase();
   });
 }
+
