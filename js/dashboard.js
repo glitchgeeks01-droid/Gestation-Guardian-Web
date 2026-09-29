@@ -2,8 +2,9 @@
 
 // loadPatientsFromFirebase removed to prevent conflict with index.html's renderDashboard
 
-// Listen for real-time telemetry updates and parse HL7 FHIR Observation payloads
-window.addEventListener('telemetryUpdate', (e) => {
+document.addEventListener('DOMContentLoaded', () => {
+    // Listen for real-time telemetry updates and parse HL7 FHIR Observation payloads
+    window.addEventListener('telemetryUpdate', (e) => {
     const data = e.detail;
     if (!data) return;
 
@@ -67,6 +68,7 @@ window.addEventListener('telemetryUpdate', (e) => {
         }
     }
 });
+});
 
 document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
@@ -75,7 +77,9 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Connecting to patient:', connectId);
         window.firebaseService.bindPatient(connectId);
         // Open side panel with basic info so charts are visible
-        document.getElementById('side-panel').classList.remove('translate-x-full');
-        document.getElementById('panel-name').innerText = 'Patient: ' + connectId;
+        const sidePanel = document.getElementById('side-panel');
+        const panelName = document.getElementById('panel-name');
+        if (sidePanel) sidePanel.classList.remove('translate-x-full');
+        if (panelName) panelName.innerText = 'Patient: ' + connectId;
     }
 });

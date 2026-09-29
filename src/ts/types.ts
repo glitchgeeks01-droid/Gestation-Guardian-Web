@@ -28,7 +28,7 @@ export interface PatientRecord {
      * The cryptographically secure Firebase Auth UID. 
      * Used exclusively as the Document ID in Firestore.
      */
-    uid: string;
+    id: string;
     
     /** 
      * The public 4-character PIN (e.g., 'GG-XXXX') used for initial pairing.
