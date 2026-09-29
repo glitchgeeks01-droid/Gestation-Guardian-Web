@@ -12,13 +12,14 @@
 
 ## ✨ Features
 
-### Patient Monitoring
+### Clinical Authentication & Patient Monitoring
+* 🔐 **Google Workspace SSO:** Clinical personnel authenticate securely via Google Workspace OAuth, ensuring strict access control to the patient telemetry portal.
 * 👩‍⚕️ **Patient Grid:** Live overview of all connected patients with gestational age and latest heart rate readings pulled directly from Firebase.
 * 🚦 **Dynamic Risk Triage (RAG):** The dashboard intelligently calculates a Gestosis Risk score in real-time based on incoming vitals and medical history, automatically categorizing patients with strict color-coded badges:
   * 🔴 **Critical (Red):** Score 13+ (e.g., severe hypertension, rapid weight gain).
   * 🟡 **Warning (Amber):** Score 6–12 (e.g., borderline elevated vitals).
   * 🟢 **Stable (Green):** Score 0–5 (normal baseline).
-* 🔗 **Connect Patient:** Doctors can link any Gestation Guardian patient to their dashboard by entering the patient's unique Clinical ID (`GG-XXXX`) in the **Connect Patient** dialog. This establishes a real-time data stream.
+* 🔗 **Secure PIN Pairing:** Doctors link Gestation Guardian patients to their dashboard by entering a temporary 4-digit Clinical PIN (e.g., `GG-XXXX`). The dashboard resolves this PIN to a secure, cryptographically hashed Firebase UID to establish the real-time telemetry stream.
 * 📊 **Clinical Side Panel:** Click any patient card to reveal a detailed intervention panel with vitals, Gestosis score, medical history, conditions, and medications.
 
 ### Real-Time Telemetry
