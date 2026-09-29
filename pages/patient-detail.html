@@ -209,34 +209,35 @@
             if (patientId) { patientId = patientId.replace('/', ''); }
 
             let patient = null;
+            const mainContainer = document.querySelector('.max-w-\\[1400px\\]');
 
             // 1. Fetch real patient data from Firebase Firestore
             try {
                 patient = await window.firebaseService.getPatientById(patientId);
+                if (!patient) throw new Error("Patient not found in database.");
             } catch (err) {
-                console.warn("Failed to fetch dynamic patient details from Firebase, falling back to simulated database.", err);
-            }
-
-            // 2. Fallback to client-side simulated database (only for exact ID match)
-            if (!patient) {
-                patient = simulatedDatabase.find(p => p.id === patientId);
-                if (patient && !patient.image && patient.photo) {
-                    patient.image = patient.photo;
-                }
-            }
-
-            // 3. If truly not found, show error instead of wrong patient data
-            if (!patient) {
-                document.getElementById('detail-name').innerText = 'Patient Not Found';
-                document.getElementById('detail-id').innerText = patientId || 'Unknown';
-                document.getElementById('detail-weeks').innerText = '--';
+                console.error("Patient Detail Error:", err);
+                // Hide normal UI, show 404 State
+                if (mainContainer) mainContainer.style.display = 'none';
+                
+                const mainArea = document.querySelector('main');
+                mainArea.insertAdjacentHTML('beforeend', `
+                    <div id="error-state" class="flex-1 flex flex-col items-center justify-center p-10 text-center mt-20">
+                        <span class="material-symbols-outlined text-7xl text-slate-300 mb-6">patient_list</span>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight font-headline mb-3">Patient Record Not Found</h2>
+                        <p class="text-slate-500 font-medium text-lg max-w-md mx-auto mb-8">The requested Clinical PIN or ID ("${patientId || 'Empty'}") does not exist, or you do not have authorization to view this telemetry stream.</p>
+                        <button onclick="window.location.href='../index.html'" class="bg-primary text-white font-bold py-3.5 px-8 rounded-xl hover:bg-primary/90 hover:shadow-lg transition-all flex items-center gap-2 mx-auto">
+                            <span class="material-symbols-outlined text-[18px]">arrow_back</span> Return to Dashboard
+                        </button>
+                    </div>
+                `);
                 return;
             }
 
-            document.getElementById('detail-name').innerText = patient.name;
+            document.getElementById('detail-name').innerText = patient.name || 'Unknown Patient';
             document.getElementById('detail-id').innerText = patient.id;
-            document.getElementById('detail-weeks').innerText = patient.weeks + " Weeks Gestation";
-            document.getElementById('detail-image').src = patient.photo || patient.image;
+            document.getElementById('detail-weeks').innerText = (patient.weeks || '--') + " Weeks Gestation";
+            document.getElementById('detail-image').src = patient.photo || patient.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(patient.name || 'Unknown')}&background=e0f2fe&color=00497d`;
             
             const vitals = patient.vitals || {};
             document.getElementById('detail-mhr').innerHTML = `${vitals.maternalHR || '--'} <span class="text-2xl text-slate-400 font-medium">BPM</span>`;

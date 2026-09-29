@@ -146,7 +146,14 @@ let currentFilter='All', searchTerm='';
 async function fetchAndRender() {
   const countNum = document.getElementById('count-num');
   countNum.innerText = '...';
-  activePatients = await window.firebaseService.getPatients();
+  
+  try {
+    activePatients = await window.firebaseService.getPatients();
+  } catch (error) {
+    console.error("Dashboard Render Error:", error);
+    activePatients = []; // Ensure it triggers the empty state
+  }
+  
   renderDashboard();
 }
 

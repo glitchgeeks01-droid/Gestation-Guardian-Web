@@ -4,78 +4,6 @@ let db = null;
 let auth = null;
 let isFirebaseEnabled = false;
 
-// Default patient templates for simulation and auto-seeding
-const mockPatients = [
-  {
-    id: "RPM-092",
-    name: "Alice R.",
-    weeks: 28,
-    status: "Critical",
-    photo: "https://ui-avatars.com/api/?name=Alice+R&background=fecaca&color=ba1a1a",
-    gestosisScore: 13,
-    vitals: {
-      maternalHR: 82, bpSys: 145, bpDia: 92,
-      weight: 78.4, weightVelocity: 1.2, kicks: 6, kicksStatus: "Low Activity", sleep: 5.5, sleepQuality: "Restless"
-    },
-    medicalHistory: {
-      conditions: "Chronic Hypertension, Gestational Diabetes",
-      medications: "Labetalol 100mg BID, Insulin Aspart",
-      symptoms: ["Severe Headache", "Facial Swelling", "Nausea"]
-    }
-  },
-  {
-    id: "RPM-114",
-    name: "Maya T.",
-    weeks: 34,
-    status: "Warning",
-    photo: "https://ui-avatars.com/api/?name=Maya+T&background=fef3c7&color=b45309",
-    gestosisScore: 6,
-    vitals: {
-      maternalHR: 76, bpSys: 130, bpDia: 85,
-      weight: 82.1, weightVelocity: 0.7, kicks: 12, kicksStatus: "Normal Activity", sleep: 6.8, sleepQuality: "Moderate"
-    },
-    medicalHistory: {
-      conditions: "Previous pre-term birth (35w)",
-      medications: "Prenatal Vitamins, Low-dose Aspirin (81mg)",
-      symptoms: ["Mild Swelling", "Heartburn"]
-    }
-  },
-  {
-    id: "RPM-205",
-    name: "Sarah J.",
-    weeks: 39,
-    status: "Stable",
-    photo: "https://ui-avatars.com/api/?name=Sarah+J&background=e0f2fe&color=00497d",
-    gestosisScore: 1,
-    vitals: {
-      maternalHR: 72, bpSys: 118, bpDia: 78,
-      weight: 85.5, weightVelocity: 0.3, kicks: 18, kicksStatus: "High Activity", sleep: 8.0, sleepQuality: "Good"
-    },
-    medicalHistory: {
-      conditions: "None reported",
-      medications: "Prenatal Vitamins",
-      symptoms: []
-    }
-  },
-  {
-    id: "RPM-301",
-    name: "Elena M.",
-    weeks: 32,
-    status: "Stable",
-    photo: "https://ui-avatars.com/api/?name=Elena+M&background=dcfce7&color=047857",
-    gestosisScore: 2,
-    vitals: {
-      maternalHR: 68, bpSys: 115, bpDia: 75,
-      weight: 74.0, weightVelocity: 0.4, kicks: 14, kicksStatus: "Normal Activity", sleep: 7.5, sleepQuality: "Good"
-    },
-    medicalHistory: {
-      conditions: "Hypothyroidism",
-      medications: "Levothyroxine 50mcg QD, Prenatal Vitamins",
-      symptoms: ["Mild Nausea"]
-    }
-  }
-];
-
 function initFirebase() {
   const config = window.firebaseConfig;
   if (config && config.projectId && config.projectId !== "YOUR_PROJECT_ID") {
@@ -85,22 +13,12 @@ function initFirebase() {
       auth = firebase.auth();
       isFirebaseEnabled = true;
       console.log("🔥 Firebase initialized successfully.");
-      
-      // Auto-seed if Firestore is empty
-      seedFirestoreIfEmpty();
     } catch (e) {
       console.error("Firebase initialization failed:", e);
     }
   } else {
-    console.warn("Firebase not configured. Running in local simulation mode.");
+    console.error("Firebase not configured properly. Cannot proceed.");
   }
-}
-
-async function seedFirestoreIfEmpty() {
-  // DISABLED: Auto-seeding removed to prevent mock data from polluting
-  // the production database. Mock patients are only used as offline fallback
-  // when Firebase is completely unavailable.
-  return;
 }
 
 // Global functions exposed to other script files
@@ -108,9 +26,7 @@ window.firebaseService = {
   getIsFirebaseEnabled: () => isFirebaseEnabled,
   
   getPatients: async () => {
-    if (!isFirebaseEnabled) {
-      return mockPatients;
-    }
+    if (!isFirebaseEnabled) throw new Error("DatabaseConnectionError: Firebase is not initialized");
     try {
       const snapshot = await db.collection('users').get();
       const patients = [];
@@ -119,34 +35,36 @@ window.firebaseService = {
       });
       return patients;
     } catch (e) {
-      console.error("Failed to fetch patients from Firestore, using mock fallback.", e);
-      return mockPatients;
+      console.error("Failed to fetch patients from Firestore.", e);
+      throw new Error("Failed to fetch patient list from database.");
     }
   },
 
   getPatientById: async (idOrPin) => {
     const cleanId = idOrPin ? idOrPin.trim() : "";
-    if (!isFirebaseEnabled) {
-      return mockPatients.find(p => p.id === cleanId) || null;
-    }
+    if (!cleanId) throw new Error("InvalidPatientIdentifier: Identifier is empty");
+    if (!isFirebaseEnabled) throw new Error("DatabaseConnectionError: Firebase is not initialized");
+    
     try {
-      // 1. Try UID
+      // Polymorphic Lookup: First, assume it might be a Document UID
       const docRef = db.collection('users').doc(cleanId);
       const docSnap = await docRef.get();
       if (docSnap.exists) {
         return { id: docSnap.id, ...docSnap.data() };
       }
       
-      // 2. Try PIN
-      const q = db.collection('users').where('pairingPin', '==', cleanId).limit(1);
+      // Secondary Lookup: Attempt to find by pairingPin (if passed from manually typed URL)
+      const q = db.collection('users').where('pairingPin', '==', cleanId.toUpperCase()).limit(1);
       const snapshot = await q.get();
       if (!snapshot.empty) {
         return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
       }
-      return mockPatients.find(p => p.id === cleanId) || null;
+      
+      // STRICT ERROR: Do not return null or mock data
+      throw new Error("PatientNotFound: The requested patient could not be found.");
     } catch (e) {
-      console.error("Failed to fetch patient details from Firestore.", e);
-      return mockPatients.find(p => p.id === cleanId) || null;
+      console.error("Database query failed:", e);
+      throw e;
     }
   },
 
@@ -154,7 +72,6 @@ window.firebaseService = {
     if (!isFirebaseEnabled) return { success: false, error: "Firebase not configured." };
     try {
       const provider = new firebase.auth.GoogleAuthProvider();
-      // Optional: Force Google Workspace domain if required (e.g., provider.setCustomParameters({ hd: 'your-hospital.org' }))
       const result = await firebase.auth().signInWithPopup(provider);
       console.log(`Authenticated as doctor: ${result.user.email}`);
       return { success: true, user: result.user };
@@ -165,16 +82,22 @@ window.firebaseService = {
   },
 
   bindPatient: async (pairingPin) => {
-    if (!isFirebaseEnabled || !db) return;
-    const cleanPin = pairingPin ? pairingPin.trim() : "";
+    if (!isFirebaseEnabled || !db) throw new Error("Database not connected");
+    const cleanPin = pairingPin ? pairingPin.trim().toUpperCase() : "";
+    
+    // Strict schema validation for the PIN format
+    if (!/^GG-[A-Z0-9]{4}$/.test(cleanPin)) {
+        console.error("Invalid PIN format.");
+        throw new Error("Invalid PIN Format. Expected GG-XXXX");
+    }
+    
     console.log(`Resolving patient UID for PIN: '${cleanPin}'`);
     try {
       // Find the secure auth.uid by querying the pairing PIN
       const q = db.collection('users').where('pairingPin', '==', cleanPin).limit(1);
       const snapshot = await q.get();
       if (snapshot.empty) {
-        console.error("No patient found with that PIN.");
-        return;
+        throw new Error("PatientNotFound: No patient registered with that PIN.");
       }
       
       const secureUid = snapshot.docs[0].id;
@@ -192,8 +115,11 @@ window.firebaseService = {
         }, (error) => {
           console.error("Error listening to telemetry:", error);
         });
+        
+      return true;
     } catch (e) {
       console.error("Error binding patient:", e);
+      throw e;
     }
   },
 
