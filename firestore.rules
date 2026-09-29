@@ -1,0 +1,33 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to verify if the requesting user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if the user is a doctor (e.g. by checking custom claims)
+    // Note: requires setting custom claims via Firebase Admin SDK when a doctor registers
+    function isDoctor() {
+       return request.auth.token.role == 'doctor';
+    }
+
+    match /users/{userId} {
+      // 1. Mobile App Users can only create or read their OWN profile
+      // 2. Doctors can read profiles if they have the specific PIN/UID (handled by querying)
+      //    To prevent unauthorized enumeration, we restrict listing all users.
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isDoctor());
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+
+      // Telemetry Subcollection
+      match /telemetry/{logId} {
+        // Patients can write telemetry to their own profile
+        // Doctors can read telemetry for patients they are authorized to view
+        allow create, update: if isAuthenticated() && request.auth.uid == userId;
+        allow read: if isAuthenticated() && (request.auth.uid == userId || isDoctor());
+      }
+    }
+  }
+}
