@@ -1,4 +1,4 @@
-# 🩺 GG Doctor Dashboard — Clinical Portal
+﻿# ðŸ©º GG Doctor Dashboard â€” Clinical Portal
 
 <div align="center">
   <img src="https://api.dicebear.com/7.x/initials/svg?seed=GGWeb&backgroundColor=00497d&textColor=FFFFFF&radius=20" alt="GG Doctor Dashboard Logo" width="120"/>
@@ -10,66 +10,90 @@
 
 **GG Doctor Dashboard** is a dedicated clinical oversight portal designed exclusively for healthcare providers to track pregnant patients' health metrics in real-time, integrating seamlessly with the [Gestation Guardian](https://github.com/glitchgeeks01-droid/Gestation-Guardian-App) maternal ecosystem.
 
-## ✨ Features
+## âœ¨ Features
 
 ### Clinical Authentication & Patient Monitoring
-* 🔐 **Google Workspace SSO:** Clinical personnel authenticate securely via Google Workspace OAuth, ensuring strict access control to the patient telemetry portal.
-* 👩‍⚕️ **Patient Grid:** Live overview of all connected patients with gestational age and latest heart rate readings pulled directly from Firebase.
-* 🚦 **Dynamic Risk Triage (RAG):** The dashboard intelligently calculates a Gestosis Risk score in real-time based on incoming vitals and medical history, automatically categorizing patients with strict color-coded badges:
-  * 🔴 **Critical (Red):** Score 13+ (e.g., severe hypertension, rapid weight gain).
-  * 🟡 **Warning (Amber):** Score 6–12 (e.g., borderline elevated vitals).
-  * 🟢 **Stable (Green):** Score 0–5 (normal baseline).
-* 🔗 **Secure PIN Pairing:** Doctors link Gestation Guardian patients to their dashboard by entering a temporary 4-digit Clinical PIN (e.g., `GG-XXXX`). The dashboard resolves this PIN to a secure, cryptographically hashed Firebase UID to establish the real-time telemetry stream.
-* 📊 **Clinical Side Panel:** Click any patient card to reveal a detailed intervention panel with vitals, Gestosis score, medical history, conditions, and medications.
+* ðŸ” **Google Workspace SSO:** Clinical personnel authenticate securely via Google Workspace OAuth, ensuring strict access control to the patient telemetry portal.
+* ðŸ‘©â€âš•ï¸ **Patient Grid:** Live overview of all connected patients with gestational age and latest heart rate readings pulled directly from Firebase.
+* ðŸš¦ **Dynamic Risk Triage (RAG):** The dashboard intelligently calculates a Gestosis Risk score in real-time based on incoming vitals and medical history, automatically categorizing patients with strict color-coded badges:
+  * ðŸ”´ **Critical (Red):** Score 13+ (e.g., severe hypertension, rapid weight gain).
+  * ðŸŸ¡ **Warning (Amber):** Score 6â€“12 (e.g., borderline elevated vitals).
+  * ðŸŸ¢ **Stable (Green):** Score 0â€“5 (normal baseline).
+* ðŸ”— **Secure PIN Pairing:** Doctors link Gestation Guardian patients to their dashboard by entering a temporary 4-digit Clinical PIN (e.g., `GG-XXXX`). The dashboard resolves this PIN to a secure, cryptographically hashed Firebase UID to establish the real-time telemetry stream.
+* ðŸ“Š **Clinical Side Panel:** Click any patient card to reveal a detailed intervention panel with vitals, Gestosis score, medical history, conditions, and medications.
 
 ### Real-Time Telemetry
-* 📡 **HL7 FHIR Telemetry Stream:** The dashboard receives strict LOINC-coded FHIR `Observation` resources from the mobile app in real-time via Firestore `onSnapshot` listeners:
+* ðŸ“¡ **HL7 FHIR Telemetry Stream:** The dashboard receives strict LOINC-coded FHIR `Observation` resources from the mobile app in real-time via Firestore `onSnapshot` listeners:
   * Blood Pressure (LOINC `85354-9`) with Systolic (`8480-6`) and Diastolic (`8462-4`) components
   * Maternal Heart Rate (LOINC `8867-4`)
-* 📈 **Live Smartwatch Chart:** Heart rate telemetry is plotted in real-time on a Chart.js line graph, simulating a clinical bedside monitor.
-* 🩸 **Blood Pressure Trending:** Systolic/diastolic values update live in the side panel and patient detail pages as new readings arrive.
+* ðŸ“ˆ **Live Smartwatch Chart:** Heart rate telemetry is plotted in real-time on a Chart.js line graph, simulating a clinical bedside monitor.
+* ðŸ©¸ **Blood Pressure Trending:** Systolic/diastolic values update live in the side panel and patient detail pages as new readings arrive.
 
 ### Clinical Intelligence
-* 🧮 **Gestosis Risk Scoring:** A comprehensive scoring algorithm that evaluates:
+* ðŸ§® **Gestosis Risk Scoring:** A comprehensive scoring algorithm that evaluates:
   * Static factors: age, parity, prior preeclampsia, chronic hypertension, diabetes, family history, multiple gestation, BMI
   * Dynamic signals: real-time blood pressure, proteinuria, glucose levels, and active symptoms
-  * Outputs a triaged risk band: **Low** (0–5), **Moderate** (6–12), **High** (13–20), **Critical** (>20)
-* 🤖 **ML Anomaly Detection:** A backend Mean Arterial Pressure (MAP) anomaly detector that generates FHIR `RiskAssessment` resources with SNOMED CT coding when statistically significant blood pressure spikes are detected.
+  * Outputs a triaged risk band: **Low** (0â€“5), **Moderate** (6â€“12), **High** (13â€“20), **Critical** (>20)
+* ðŸ¤– **ML Anomaly Detection:** A backend Mean Arterial Pressure (MAP) anomaly detector that generates FHIR `RiskAssessment` resources with SNOMED CT coding when statistically significant blood pressure spikes are detected.
 
 ### Search & Navigation
-* 🔍 **Global Patient Search:** Quick search by patient name or ID directly on the main dashboard grid.
-* 📋 **Deep-Dive Detail Pages:** Dedicated pages for individual patients with full vitals breakdown, blood pressure history, and heart rate logs.
-* ❓ **Help Center:** Searchable directory of clinical guides, integration tutorials, and platform documentation.
+* ðŸ” **Global Patient Search:** Quick search by patient name or ID directly on the main dashboard grid.
+* ðŸ“‹ **Deep-Dive Detail Pages:** Dedicated pages for individual patients with full vitals breakdown, blood pressure history, and heart rate logs.
+* â“ **Help Center:** Searchable directory of clinical guides, integration tutorials, and platform documentation.
 
 ### Patient Detail Views
-* 🫀 **Blood Pressure Detail:** Historical BP log with trend analysis and risk indicators.
-* 💓 **Heart Rate Detail:** Historical MHR log with live chart rendering.
-* 📝 **Medical Summary:** Conditions, medications, active symptoms, and clinical notes.
+* ðŸ«€ **Blood Pressure Detail:** Historical BP log with trend analysis and risk indicators.
+* ðŸ’“ **Heart Rate Detail:** Historical MHR log with live chart rendering.
+* ðŸ“ **Medical Summary:** Conditions, medications, active symptoms, and clinical notes.
 
 ## 🛠️ Technology Stack
 
-* **Frontend:** HTML5, Vanilla JavaScript (ES6+), and Chart.js for live telemetry graphing.
+* **Frontend Architecture:** HTML5 and strict **TypeScript**, compiled down to ESNext for vanilla browser compatibility.
+* **Type Safety:** Enforces strict Type Contracts (PatientRecord, TelemetryData) ensuring Data Schema consistency between the Mobile App and the Dashboard.
 * **Styling:** Tailwind CSS v4 (compiled via CLI) with custom Glassmorphism theme.
+* **Visualizations:** Chart.js for live telemetry graphing.
 * **Backend:**
-  * **Firebase Firestore** — Cloud-based real-time synchronization (shared `gg-doctor-dashboard` project).
-  * **Local SQLite Server** — Optional fallback for offline or locally-synced patient data.
-* **Data Standard:** HL7 FHIR R4 with LOINC observation coding and SNOMED CT risk assessment coding.
+  * **Firebase Firestore** – Cloud-based real-time synchronization.
+  * **Firebase Auth** – Google Workspace OAuth for clinician access control.
+* **Data Standard:** HL7 FHIR R4 with LOINC observation and SNOMED CT risk assessment coding.
 * **Background Daemon:** Node-cron powered IoT simulator that pushes realistic telemetry updates every 15 minutes.
 
 ---
 
-## 🔗 Gestation Guardian Integration
+## 💻 Local Development
+
+With the introduction of the TypeScript compiler alongside the Tailwind engine, the build pipeline is now completely automated:
+
+1. **Install Dependencies:**
+   `ash
+   npm install
+   `
+2. **Start the Development Server (Dual-Watcher):**
+   `ash
+   npm run dev
+   `
+   *This command spins up concurrent watchers: it actively compiles src/ts/*.ts to js/*.js and compiles your Tailwind utility classes into css/output.css on every save.*
+
+3. **Build for Production:**
+   `ash
+   npm run build
+   `
+
+---
+
+
+## ðŸ”— Gestation Guardian Integration
 
 ### How the Handshake Works
 
 ```
 Gestation Guardian (Patient)             Firebase Firestore             Doctor Dashboard (Clinician)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━             ━━━━━━━━━━━━━━━━━━             ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. Patient signs up              ──►  users/GG-XXXX (profile)  ◄──  getPatients() reads from `users`
-2. Patient logs BP (120/80)      ──►  users/GG-XXXX/telemetry  ◄──  bindPatient() → onSnapshot()
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”             â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”             â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+1. Patient signs up              â”€â”€â–º  users/GG-XXXX (profile)  â—„â”€â”€  getPatients() reads from `users`
+2. Patient logs BP (120/80)      â”€â”€â–º  users/GG-XXXX/telemetry  â—„â”€â”€  bindPatient() â†’ onSnapshot()
    FHIR Observation                   LOINC 85354-9                  telemetryUpdate CustomEvent
    LOINC 85354-9                      LOINC 8867-4                   FHIR parser updates live charts
-3. Patient logs Heart Rate (72)  ──►  users/GG-XXXX/telemetry  ◄──  Real-time chart rendering
+3. Patient logs Heart Rate (72)  â”€â”€â–º  users/GG-XXXX/telemetry  â—„â”€â”€  Real-time chart rendering
 ```
 
 1. A patient signs up in the **Gestation Guardian** mobile app. A unique Clinical ID (`GG-XXXX`) is generated and displayed on their profile page.
@@ -83,7 +107,7 @@ Both the Gestation Guardian mobile app and this Doctor Dashboard connect to the 
 
 ---
 
-## 🚀 Getting Started
+## ðŸš€ Getting Started
 
 ### Prerequisites
 * Node.js (v18+)
@@ -91,7 +115,7 @@ Both the Gestation Guardian mobile app and this Doctor Dashboard connect to the 
 
 ### Setting Up the Backend
 
-#### Cloud Connection (Firebase Firestore — Recommended)
+#### Cloud Connection (Firebase Firestore â€” Recommended)
 1. Configure your Web App credentials inside `js/firebase-config.js`.
 2. Generate a `serviceAccountKey.json` from the Firebase Console (only needed for the sync daemon).
 3. Place `serviceAccountKey.json` in the root directory of this repository.
@@ -131,54 +155,54 @@ npm run sync
 ```
 
 * **Auto-Seeding:** If it connects to a fresh Firestore instance, it automatically seeds the database with default maternal patient templates.
-* **ML Anomaly Detection:** Integrates `ml-baseline.js` which calculates Mean Arterial Pressure (MAP) statistics and flags anomalies when current readings exceed μ + 1.5σ.
+* **ML Anomaly Detection:** Integrates `ml-baseline.js` which calculates Mean Arterial Pressure (MAP) statistics and flags anomalies when current readings exceed Î¼ + 1.5Ïƒ.
 * **Graceful Fallback:** If `serviceAccountKey.json` is missing, the daemon falls back to local simulation mode.
 
 ---
 
-## 🏗️ Architecture
+## ðŸ—ï¸ Architecture
 
 ```
 Gestation-Guardian-Web/
-├── js/
-│   ├── firebase-config.js    # Shared Firebase credentials (gg-doctor-dashboard)
-│   ├── firebase-service.js   # Firestore queries, real-time listeners, Gestosis scoring
-│   ├── dashboard.js          # FHIR telemetry parser, Connect Patient handler, live charts
-│   ├── backend-sync.js       # Node.js IoT simulator daemon (server-side only)
-│   ├── ml-baseline.js        # MAP anomaly detection engine (server-side only)
-│   ├── app.js                # Sidebar loader, navigation, shared UI
-│   └── server.js             # Express SQLite server (optional local backend)
-├── pages/
-│   ├── connect-patient-record.html   # Connect Patient dialog
-│   ├── patient-detail.html           # Individual patient deep-dive
-│   ├── blood-pressure-detail.html    # BP history and trending
-│   ├── heart-rate-detail.html        # MHR history and trending
-│   └── ...
-├── components/
-│   └── sidebar.html          # Shared navigation sidebar
-├── css/
-│   └── output.css            # Compiled Tailwind CSS
-└── index.html                # Main dashboard entry point
+â”œâ”€â”€ js/
+â”‚   â”œâ”€â”€ firebase-config.js    # Shared Firebase credentials (gg-doctor-dashboard)
+â”‚   â”œâ”€â”€ firebase-service.js   # Firestore queries, real-time listeners, Gestosis scoring
+â”‚   â”œâ”€â”€ dashboard.js          # FHIR telemetry parser, Connect Patient handler, live charts
+â”‚   â”œâ”€â”€ backend-sync.js       # Node.js IoT simulator daemon (server-side only)
+â”‚   â”œâ”€â”€ ml-baseline.js        # MAP anomaly detection engine (server-side only)
+â”‚   â”œâ”€â”€ app.js                # Sidebar loader, navigation, shared UI
+â”‚   â””â”€â”€ server.js             # Express SQLite server (optional local backend)
+â”œâ”€â”€ pages/
+â”‚   â”œâ”€â”€ connect-patient-record.html   # Connect Patient dialog
+â”‚   â”œâ”€â”€ patient-detail.html           # Individual patient deep-dive
+â”‚   â”œâ”€â”€ blood-pressure-detail.html    # BP history and trending
+â”‚   â”œâ”€â”€ heart-rate-detail.html        # MHR history and trending
+â”‚   â””â”€â”€ ...
+â”œâ”€â”€ components/
+â”‚   â””â”€â”€ sidebar.html          # Shared navigation sidebar
+â”œâ”€â”€ css/
+â”‚   â””â”€â”€ output.css            # Compiled Tailwind CSS
+â””â”€â”€ index.html                # Main dashboard entry point
 ```
 
 ### Firestore Schema
 
 ```
-users/                          ← Patient profiles (shared with mobile app)
-  └── {patientId}/              ← e.g., GG-XXXX
-      ├── name, email, lmp, age, bloodGroup, ...
-      └── telemetry/            ← Time-series subcollection
-          └── {autoId}/         ← FHIR Observation documents
-              ├── resourceType: "Observation"
-              ├── code.coding[0].code: "85354-9" | "8867-4"
-              ├── component[].valueQuantity.value: 120
-              └── effectiveDateTime: "2026-08-19T..."
+users/                          â† Patient profiles (shared with mobile app)
+  â””â”€â”€ {patientId}/              â† e.g., GG-XXXX
+      â”œâ”€â”€ name, email, lmp, age, bloodGroup, ...
+      â””â”€â”€ telemetry/            â† Time-series subcollection
+          â””â”€â”€ {autoId}/         â† FHIR Observation documents
+              â”œâ”€â”€ resourceType: "Observation"
+              â”œâ”€â”€ code.coding[0].code: "85354-9" | "8867-4"
+              â”œâ”€â”€ component[].valueQuantity.value: 120
+              â””â”€â”€ effectiveDateTime: "2026-08-19T..."
 ```
 
-## 🔒 Security
+## ðŸ”’ Security
 
 * Firebase credentials are configured client-side for Firestore read/write operations.
-* The Connect Patient flow requires the patient to explicitly share their Clinical ID with the doctor — no patient data is exposed without consent.
+* The Connect Patient flow requires the patient to explicitly share their Clinical ID with the doctor â€” no patient data is exposed without consent.
 * The backend sync daemon uses Firebase Admin SDK with a service account key for server-side operations.
 
 ---
@@ -186,3 +210,4 @@ users/                          ← Patient profiles (shared with mobile app)
 <div align="center">
   <b>Observe. Intervene. Protect.</b>
 </div>
+
