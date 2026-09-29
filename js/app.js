@@ -46,7 +46,9 @@ function injectMetricNav() {
     const cleanPage = page.replace(/\?.*$/, '');
     if (!detailPages.some(p => cleanPage.includes(p.replace('.html', '')))) return;
 
-    const id   = patientId || '';
+    // Sanitize patient ID to prevent DOM-based XSS (BUG-004)
+    const sanitizeHTML = (str) => str.replace(/[&<>"'\/]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;",'/':'&#x2F;'}[c]));
+    const id   = patientId ? patientId.replace(/[^a-zA-Z0-9\-_]/g, '') : '';
     const qs   = id ? `?id=${encodeURIComponent(id)}` : '';
 
     const metrics = [
@@ -71,8 +73,8 @@ function injectMetricNav() {
         </a>`;
     }).join('');
 
-    // Patient label for breadcrumb
-    const patientLabel = id || 'Patient';
+    // Patient label for breadcrumb — use sanitized version to prevent XSS
+    const patientLabel = sanitizeHTML(id || 'Patient');
     const overviewHref = `patient-detail.html${qs}`;
 
     const navHTML = `

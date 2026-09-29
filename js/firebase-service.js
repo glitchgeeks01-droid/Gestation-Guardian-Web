@@ -45,20 +45,69 @@ window.firebaseService = {
         if (!isFirebaseEnabled)
             throw new Error("DatabaseConnectionError: Firebase is not initialized");
         try {
+            let patientData = null;
+            let patientUid = cleanId;
             // Polymorphic Lookup: First, assume it might be a Document UID
             const docRef = db.collection('users').doc(cleanId);
             const docSnap = await docRef.get();
             if (docSnap.exists) {
-                return { id: docSnap.id, ...docSnap.data() };
+                patientData = { id: docSnap.id, ...docSnap.data() };
             }
-            // Secondary Lookup: Attempt to find by pairingPin
-            const q = db.collection('users').where('pairingPin', '==', cleanId.toUpperCase()).limit(1);
-            const snapshot = await q.get();
-            if (!snapshot.empty) {
-                return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+            else {
+                // Secondary Lookup: Attempt to find by pairingPin
+                const q = db.collection('users').where('pairingPin', '==', cleanId.toUpperCase()).limit(1);
+                const snapshot = await q.get();
+                if (!snapshot.empty) {
+                    patientData = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+                    patientUid = snapshot.docs[0].id;
+                }
             }
-            // STRICT ERROR
-            throw new Error("PatientNotFound: The requested patient could not be found.");
+            if (!patientData) {
+                // STRICT ERROR
+                throw new Error("PatientNotFound: The requested patient could not be found.");
+            }
+            // BUG-001 FIX: Fetch latest telemetry because the app writes to the subcollection, not the root doc
+            try {
+                const telemetryQuery = await db.collection('users').doc(patientUid).collection('telemetry')
+                    .orderBy('effectiveDateTime', 'desc').limit(10).get();
+                const vitals = patientData.vitals || {};
+                telemetryQuery.forEach((tDoc) => {
+                    const data = tDoc.data();
+                    const code = data.code?.coding?.[0]?.code;
+                    // BP Panel
+                    if (code === '85354-9' && (!vitals.bpSys || !vitals.bpDia)) {
+                        data.component?.forEach((comp) => {
+                            const cCode = comp.code?.coding?.[0]?.code;
+                            if (cCode === '8480-6')
+                                vitals.bpSys = comp.valueQuantity?.value;
+                            if (cCode === '8462-4')
+                                vitals.bpDia = comp.valueQuantity?.value;
+                            if (cCode === '8867-4' && !vitals.maternalHR)
+                                vitals.maternalHR = comp.valueQuantity?.value;
+                        });
+                    }
+                    // Generic Vitals or Heart Rate
+                    else if (code === '8867-4' && !vitals.maternalHR) {
+                        vitals.maternalHR = data.valueQuantity?.value;
+                    }
+                    else if (code === '8716-3') {
+                        data.component?.forEach((comp) => {
+                            const cCode = comp.code?.coding?.[0]?.code;
+                            if (cCode === '29463-7' && !vitals.weight)
+                                vitals.weight = comp.valueQuantity?.value;
+                            if (cCode === '2339-0' && !vitals.glucose)
+                                vitals.glucose = comp.valueQuantity?.value;
+                            if (cCode === '8310-5' && !vitals.temperature)
+                                vitals.temperature = comp.valueQuantity?.value;
+                        });
+                    }
+                });
+                patientData.vitals = vitals;
+            }
+            catch (telErr) {
+                console.warn("Failed to fetch telemetry subcollection:", telErr);
+            }
+            return patientData;
         }
         catch (e) {
             console.error("Database query failed:", e);
