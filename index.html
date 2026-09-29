@@ -178,14 +178,21 @@ function renderDashboard(){
   empty.classList.add('hidden');empty.classList.remove('flex');
 
   filtered.forEach(p=>{
+    const score = window.firebaseService.calculateGestosisScore(p);
+    let computedStatus = p.status || 'Stable';
+    
+    if (score >= 13 || /critical|high|red/i.test(p.status)) computedStatus = 'Critical';
+    else if (score >= 6 || /warning|moderate|amber/i.test(p.status)) computedStatus = 'Warning';
+    else computedStatus = p.status || 'Stable';
+    
     let sc='',pr='',fb='bg-slate-50 border-slate-100',ft='text-slate-900';
-    if(p.status==='Critical' || p.status==='Red'){
-      sc='bg-error/10 text-error';
-      pr="<span class='w-1.5 h-1.5 rounded-full bg-error animate-pulse'></span>";
+    if(computedStatus==='Critical'){
+      sc='bg-red-100 text-red-700';
+      pr="<span class='w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse'></span>";
       fb='bg-red-50/30 border-red-100/50';
-      ft='text-error';
+      ft='text-red-700';
     }
-    else if(p.status==='Warning' || p.status==='Amber'){
+    else if(computedStatus==='Warning'){
       sc='bg-amber-100 text-amber-700';
       pr="<span class='w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse'></span>";
       fb='bg-amber-50/30 border-amber-100/50';
@@ -196,15 +203,14 @@ function renderDashboard(){
     }
     
     const pct=Math.round(((p.weeks || 24)/40)*100);
-    const pc= (p.status==='Critical' || p.status==='Red') ?'#ba1a1a': (p.status==='Warning' || p.status==='Amber') ?'#f59e0b':'#10b981';
+    const pc= (computedStatus==='Critical') ?'#ba1a1a': (computedStatus==='Warning') ?'#f59e0b':'#10b981';
     const photo = p.photo || p.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=e0f2fe&color=00497d`;
     const vitals = p.vitals || {};
     
-    const score = window.firebaseService.calculateGestosisScore(p);
     let riskBadgeColor = 'bg-emerald-50 text-emerald-700 border border-emerald-100';
-    if (score > 12) {
+    if (score >= 13) {
       riskBadgeColor = 'bg-red-50 text-red-700 border border-red-100';
-    } else if (score > 5) {
+    } else if (score >= 6) {
       riskBadgeColor = 'bg-amber-50 text-amber-700 border border-amber-100';
     }
 
@@ -221,7 +227,7 @@ function renderDashboard(){
               </div>
             </div>
           </div>
-          <span class="${sc} px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm">${pr} ${p.status}</span>
+          <span class="${sc} px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm">${pr} ${computedStatus}</span>
         </div>
         <div class="mb-3">
           <div class="flex justify-between mb-1"><p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Gestation</p><p class="text-[11px] font-black text-slate-600">${p.weeks || '--'} <span class="font-medium text-slate-400">/ 40 wks</span></p></div>
@@ -252,6 +258,11 @@ function openIntervention(id){
   const vitals = p.vitals || {};
   document.getElementById('panel-mhr').innerText=vitals.maternalHR || '--';
   document.getElementById('panel-bp').innerText=(vitals.bpSys || '--')+'/'+(vitals.bpDia || '--');
+
+  // Trigger the live telemetry socket for this specific patient!
+  if (window.firebaseService && window.firebaseService.bindPatient) {
+      window.firebaseService.bindPatient(p.pairingPin || p.id);
+  }
 
   // Calculate and bind Gestosis Score Info
   const score = window.firebaseService.calculateGestosisScore(p);

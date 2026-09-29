@@ -97,19 +97,10 @@ function initFirebase() {
 }
 
 async function seedFirestoreIfEmpty() {
-  if (!isFirebaseEnabled) return;
-  try {
-    const snapshot = await db.collection('users').limit(1).get();
-    if (snapshot.empty) {
-      console.log("Seeding Firestore with default mock patients...");
-      for (const patient of mockPatients) {
-        await db.collection('users').doc(patient.id).set(patient);
-      }
-      console.log("Firestore seeding completed.");
-    }
-  } catch (e) {
-    console.error("Auto-seeding failed:", e);
-  }
+  // DISABLED: Auto-seeding removed to prevent mock data from polluting
+  // the production database. Mock patients are only used as offline fallback
+  // when Firebase is completely unavailable.
+  return;
 }
 
 // Global functions exposed to other script files
@@ -133,43 +124,77 @@ window.firebaseService = {
     }
   },
 
-  getPatientById: async (id) => {
+  getPatientById: async (idOrPin) => {
+    const cleanId = idOrPin ? idOrPin.trim() : "";
     if (!isFirebaseEnabled) {
-      return mockPatients.find(p => p.id === id) || null;
+      return mockPatients.find(p => p.id === cleanId) || null;
     }
     try {
-      const doc = await db.collection('users').doc(id).get();
-      if (doc.exists) {
-        return { id: doc.id, ...doc.data() };
+      // 1. Try UID
+      const docRef = db.collection('users').doc(cleanId);
+      const docSnap = await docRef.get();
+      if (docSnap.exists) {
+        return { id: docSnap.id, ...docSnap.data() };
       }
-      return mockPatients.find(p => p.id === id) || null;
+      
+      // 2. Try PIN
+      const q = db.collection('users').where('pairingPin', '==', cleanId).limit(1);
+      const snapshot = await q.get();
+      if (!snapshot.empty) {
+        return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+      }
+      return mockPatients.find(p => p.id === cleanId) || null;
     } catch (e) {
       console.error("Failed to fetch patient details from Firestore.", e);
-      return mockPatients.find(p => p.id === id) || null;
+      return mockPatients.find(p => p.id === cleanId) || null;
     }
   },
 
-  login: async (email, password) => {
-    // Universal access bypass: Accept any email and password combination
-    console.log(`Granting universal access to: ${email}`);
-    return { success: true, user: { email, role: 'doctor' } };
+  login: async () => {
+    if (!isFirebaseEnabled) return { success: false, error: "Firebase not configured." };
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      // Optional: Force Google Workspace domain if required (e.g., provider.setCustomParameters({ hd: 'your-hospital.org' }))
+      const result = await firebase.auth().signInWithPopup(provider);
+      console.log(`Authenticated as doctor: ${result.user.email}`);
+      return { success: true, user: result.user };
+    } catch (e) {
+      console.error("Google Auth failed:", e);
+      return { success: false, error: e.message };
+    }
   },
 
-  bindPatient: (uniqueId) => {
+  bindPatient: async (pairingPin) => {
     if (!isFirebaseEnabled || !db) return;
-    console.log(`Binding to patient telemetry for ${uniqueId}`);
-    db.collection('users').doc(uniqueId).collection('telemetry')
-      .onSnapshot((snapshot) => {
-        snapshot.docChanges().forEach((change) => {
-          if (change.type === 'added' || change.type === 'modified') {
-            const data = change.doc.data();
-            const event = new CustomEvent('telemetryUpdate', { detail: data });
-            window.dispatchEvent(event);
-          }
+    const cleanPin = pairingPin ? pairingPin.trim() : "";
+    console.log(`Resolving patient UID for PIN: '${cleanPin}'`);
+    try {
+      // Find the secure auth.uid by querying the pairing PIN
+      const q = db.collection('users').where('pairingPin', '==', cleanPin).limit(1);
+      const snapshot = await q.get();
+      if (snapshot.empty) {
+        console.error("No patient found with that PIN.");
+        return;
+      }
+      
+      const secureUid = snapshot.docs[0].id;
+      console.log(`Binding to patient telemetry for UID: ${secureUid}`);
+      
+      db.collection('users').doc(secureUid).collection('telemetry')
+        .onSnapshot((telemetrySnapshot) => {
+          telemetrySnapshot.docChanges().forEach((change) => {
+            if (change.type === 'added' || change.type === 'modified') {
+              const data = change.doc.data();
+              const event = new CustomEvent('telemetryUpdate', { detail: data });
+              window.dispatchEvent(event);
+            }
+          });
+        }, (error) => {
+          console.error("Error listening to telemetry:", error);
         });
-      }, (error) => {
-        console.error("Error listening to telemetry:", error);
-      });
+    } catch (e) {
+      console.error("Error binding patient:", e);
+    }
   },
 
   calculateGestosisScore: (patient) => {

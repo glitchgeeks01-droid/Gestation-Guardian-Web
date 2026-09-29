@@ -217,16 +217,21 @@
                 console.warn("Failed to fetch dynamic patient details from Firebase, falling back to simulated database.", err);
             }
 
-            // 2. Fallback to client-side simulated database
+            // 2. Fallback to client-side simulated database (only for exact ID match)
             if (!patient) {
-                patient = simulatedDatabase.find(p => p.id === patientId) || simulatedDatabase[0];
-                // Normalise the simulated structure if necessary
+                patient = simulatedDatabase.find(p => p.id === patientId);
                 if (patient && !patient.image && patient.photo) {
                     patient.image = patient.photo;
                 }
             }
 
-            if (!patient) return;
+            // 3. If truly not found, show error instead of wrong patient data
+            if (!patient) {
+                document.getElementById('detail-name').innerText = 'Patient Not Found';
+                document.getElementById('detail-id').innerText = patientId || 'Unknown';
+                document.getElementById('detail-weeks').innerText = '--';
+                return;
+            }
 
             document.getElementById('detail-name').innerText = patient.name;
             document.getElementById('detail-id').innerText = patient.id;

@@ -10,6 +10,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config={theme:{extend:{colors:{"primary":"#00497d","error":"#ba1a1a","surface":"#f8fafc"},fontFamily:{headline:["Manrope"],body:["Inter"]}}}}</script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
     <script src="js/firebase-service.js"></script>
     <link href="css/output.css" rel="stylesheet">
 </head>
@@ -25,32 +30,13 @@
             <p class="text-sm text-slate-500 font-medium mt-2">GG Doctor Dashboard RPM System</p>
         </div>
 
-        <form class="space-y-5" id="login-form">
-            
-            <div>
-                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 ml-1">Clinical Email</label>
-                <div class="relative">
-                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">mail</span>
-                    <input type="email" id="email" required placeholder="doctor@hospital.org" 
-                        class="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all font-medium text-slate-900"/>
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 ml-1">Password</label>
-                <div class="relative">
-                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">lock</span>
-                    <input type="password" id="password" required placeholder="••••••••" 
-                        class="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all font-medium text-slate-900"/>
-                </div>
-            </div>
-
+        <div class="space-y-5">
             <div id="error-message" class="hidden text-error text-xs font-bold mt-2 text-center bg-red-50 p-3 rounded-lg border border-red-100 animate-pulse"></div>
 
-            <button type="submit" class="w-full bg-primary text-white font-bold py-4 rounded-xl mt-4 hover:bg-primary/90 hover:shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2">
-                Secure Login <span class="material-symbols-outlined text-[18px]">lock_open</span>
+            <button id="google-login-btn" class="w-full bg-white text-slate-700 font-bold py-4 rounded-xl mt-4 border border-slate-300 hover:bg-slate-50 hover:shadow-sm transition-all active:scale-[0.98] flex items-center justify-center gap-3">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5"> Sign In with Google Workspace
             </button>
-        </form>
+        </div>
 
         <div class="mt-8 text-center border-t border-slate-100 pt-6">
             <p class="text-xs text-slate-400 font-medium">Authorized Clinical Personnel Only</p>
@@ -58,19 +44,17 @@
     </main>
 
     <script>
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
+        document.getElementById('google-login-btn').addEventListener('click', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
             const errorEl = document.getElementById('error-message');
             errorEl.classList.add('hidden');
 
-            const btn = e.target.querySelector('button[type="submit"]');
+            const btn = e.target.closest('button');
             const originalText = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = 'Authenticating...';
 
-            const result = await window.firebaseService.login(email, password);
+            const result = await window.firebaseService.login();
             if (result.success) {
                 window.location.href = 'index.html';
             } else {
