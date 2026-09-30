@@ -11,6 +11,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <!-- Config & Service -->
+    <script src="../js/firebase-config.js"></script>
+    <script src="../js/firebase-service.js"></script>
         <style>
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
         body { font-family: 'Inter', sans-serif; }
@@ -182,12 +189,45 @@
                         <div class="relative">
                             <input class="w-full bg-surface-container-highest/50 border-b-2 border-outline-variant/30 px-4 py-4 font-mono text-lg focus:border-primary focus:glass-card outline-none transition-all rounded-t-xl" id="patient-id" placeholder="e.g., A1B2-C3D4" type="text"/>
                         </div>
+                        <p id="connect-error" class="text-sm text-error font-medium mt-2 hidden">Patient ID not found.</p>
                     </div>
                     
-                    <button onclick="const id = document.getElementById('patient-id').value; if(id) window.location.href='../index.html?connectId=' + encodeURIComponent(id)" class="w-full bg-gradient-to-r from-primary to-primary-container text-white py-4 px-8 rounded-xl font-bold flex items-center justify-center gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all active:translate-y-0 group">
+                    <button onclick="handleConnect()" id="connect-btn" class="w-full bg-gradient-to-r from-primary to-primary-container text-white py-4 px-8 rounded-xl font-bold flex items-center justify-center gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all active:translate-y-0 group">
                         Connect Record
                         <span class="material-symbols-outlined transition-transform group-hover:translate-x-1">arrow_forward</span>
                     </button>
+
+                    <script>
+                        async function handleConnect() {
+                            const idInput = document.getElementById('patient-id').value.trim();
+                            const errorEl = document.getElementById('connect-error');
+                            const btn = document.getElementById('connect-btn');
+                            
+                            errorEl.classList.add('hidden');
+                            
+                            if(!idInput) return;
+                            
+                            btn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span> Connecting...';
+                            btn.disabled = true;
+
+                            try {
+                                const patient = await window.firebaseService.getPatientById(idInput);
+                                if (!patient) {
+                                    errorEl.innerText = "Clinical ID not found in database.";
+                                    errorEl.classList.remove('hidden');
+                                    btn.innerHTML = 'Connect Record <span class="material-symbols-outlined transition-transform group-hover:translate-x-1">arrow_forward</span>';
+                                    btn.disabled = false;
+                                } else {
+                                    window.location.href = '../index.html?connectId=' + encodeURIComponent(idInput);
+                                }
+                            } catch(err) {
+                                errorEl.innerText = "Error connecting to database.";
+                                errorEl.classList.remove('hidden');
+                                btn.innerHTML = 'Connect Record <span class="material-symbols-outlined transition-transform group-hover:translate-x-1">arrow_forward</span>';
+                                btn.disabled = false;
+                            }
+                        }
+                    </script>
                     
                     <div class="mt-8 flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-tertiary/10 border border-tertiary/20">
                         <span class="material-symbols-outlined text-tertiary text-sm" style="font-variation-settings: 'FILL' 1;">verified_user</span>

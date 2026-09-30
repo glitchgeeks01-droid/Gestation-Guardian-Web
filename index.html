@@ -29,6 +29,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <!-- Config & Service -->
 <script src="js/firebase-config.js"></script>
+<script src="js/audit-logger.js"></script>
 <script src="js/firebase-service.js"></script>
     <link href="css/output.css" rel="stylesheet">
 </head>
@@ -72,6 +73,16 @@
       <p class="text-xl font-bold text-slate-400">No patients found</p>
       <p class="text-sm text-slate-400 mt-1">Try a different name or ID</p>
       <button onclick="clearSearch()" class="mt-4 text-primary font-bold text-sm hover:underline">Clear search</button>
+    </div>
+    <div id="no-patients-state" class="hidden flex-col items-center justify-center py-24 text-center">
+      <span class="material-symbols-outlined text-6xl text-slate-300 mb-4">group_add</span>
+      <p class="text-xl font-bold text-slate-400">No patients connected yet.</p>
+      <p class="text-sm text-slate-400 mt-1">Use the Connect Patient feature to link a patient by their Clinical ID.</p>
+    </div>
+    <div id="error-state" class="hidden flex-col items-center justify-center py-24 text-center">
+      <span class="material-symbols-outlined text-6xl text-red-300 mb-4">wifi_off</span>
+      <p class="text-xl font-bold text-red-400">Unable to connect to the database.</p>
+      <p class="text-sm text-red-400 mt-1">Please check your internet connection.</p>
     </div>
   </div>
 
@@ -142,16 +153,19 @@
 <script>
 let activePatients = [];
 let currentFilter='All', searchTerm='';
+let fetchError = false;
 
 async function fetchAndRender() {
   const countNum = document.getElementById('count-num');
   countNum.innerText = '...';
+  fetchError = false;
   
   try {
     activePatients = await window.firebaseService.getPatients();
   } catch (error) {
     console.error("Dashboard Render Error:", error);
     activePatients = []; // Ensure it triggers the empty state
+    fetchError = true;
   }
   
   renderDashboard();
@@ -170,8 +184,28 @@ window.filterPatients=function(status){
 function renderDashboard(){
   const grid=document.getElementById('patient-grid');
   const empty=document.getElementById('empty-state');
+  const noPatients=document.getElementById('no-patients-state');
+  const errorState=document.getElementById('error-state');
   grid.innerHTML='';
   
+  empty.classList.add('hidden'); empty.classList.remove('flex');
+  noPatients.classList.add('hidden'); noPatients.classList.remove('flex');
+  errorState.classList.add('hidden'); errorState.classList.remove('flex');
+
+  if (fetchError) {
+    document.getElementById('count-num').innerText = 0;
+    errorState.classList.remove('hidden');
+    errorState.classList.add('flex');
+    return;
+  }
+
+  if (activePatients.length === 0) {
+    document.getElementById('count-num').innerText = 0;
+    noPatients.classList.remove('hidden');
+    noPatients.classList.add('flex');
+    return;
+  }
+
   const filtered=activePatients.filter(p=>{
     const ok=!searchTerm||p.name.toLowerCase().includes(searchTerm)||p.id.toLowerCase().includes(searchTerm);
     if(!ok)return false;
@@ -182,7 +216,6 @@ function renderDashboard(){
   
   document.getElementById('count-num').innerText=filtered.length;
   if(filtered.length===0){empty.classList.remove('hidden');empty.classList.add('flex');return;}
-  empty.classList.add('hidden');empty.classList.remove('flex');
 
   filtered.forEach(p=>{
     const score = window.firebaseService.calculateGestosisScore(p);

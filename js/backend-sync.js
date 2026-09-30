@@ -15,15 +15,20 @@ let db = null;
 const serviceAccountPath = path.join(__dirname, '..', 'serviceAccountKey.json');
 
 try {
-  if (fs.existsSync(serviceAccountPath)) {
-    const serviceAccount = require(serviceAccountPath);
+  if (process.env.FIREBASE_PROJECT_ID) {
     admin.initializeApp({
-      credential: admin.cert(serviceAccount)
+      credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL || "test@test.com",
+        privateKey: process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') : "dummy_key"
+      }),
+      // Alternatively, initializing with just projectId for simulation
+      projectId: process.env.FIREBASE_PROJECT_ID
     });
     db = getFirestore();
     console.log("🔥 Firebase Admin connected successfully.");
   } else {
-    console.warn("⚠️  Warning: 'serviceAccountKey.json' not found in root directory.");
+    console.warn("⚠️  Warning: FIREBASE_PROJECT_ID not found in .env.");
     console.warn("   Running in Local Simulation Mode. Vitals will generate but won't push to cloud.\n");
   }
 } catch (error) {

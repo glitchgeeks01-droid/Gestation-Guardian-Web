@@ -13,15 +13,19 @@
     "watch:css": "tailwindcss -i ./src/input.css -o ./css/output.css --watch",
     "watch:ts": "tsc --watch",
     "dev": "npm run watch:css & npm run watch:ts",
-    "sync": "node js/backend-sync.js"
+    "sync": "node js/backend-sync.js",
+    "test": "npx playwright test",
+    "lint": "npx eslint js/"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.59.1",
     "@tailwindcss/cli": "^4.3.3",
     "@types/node": "^25.6.0",
+    "eslint": "^10.11.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3"
   },

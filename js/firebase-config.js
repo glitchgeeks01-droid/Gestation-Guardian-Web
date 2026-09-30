@@ -1,5 +1,7 @@
 // js/firebase-config.js
 // Replace the placeholder values below with your actual Firebase Project Configuration.
+// WARNING: These are client-side Firebase keys. They are safe to expose in the browser per Firebase documentation, 
+// but ensure your database is protected by proper Firestore Security Rules.
 
 const firebaseConfig = {
   apiKey: "AIzaSyCdkoux4Sb8Lwep_DkU24P7tn-YlfF7xoI",

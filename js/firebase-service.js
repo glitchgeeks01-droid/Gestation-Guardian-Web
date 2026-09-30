@@ -28,6 +28,7 @@ Object.assign(window.firebaseService, {
     getPatients: async () => {
         if (!isFirebaseEnabled)
             throw new Error("DatabaseConnectionError: Firebase is not initialized");
+        if (window.AuditLogger) window.AuditLogger.log('VIEW_PATIENT_LIST', {});
         try {
             const snapshot = await db.collection('users').get();
             const patients = [];
@@ -47,6 +48,7 @@ Object.assign(window.firebaseService, {
             throw new Error("InvalidPatientIdentifier: Identifier is empty");
         if (!isFirebaseEnabled)
             throw new Error("DatabaseConnectionError: Firebase is not initialized");
+        if (window.AuditLogger) window.AuditLogger.log('VIEW_PATIENT_DETAIL', { patientId: cleanId });
         try {
             let patientData = null;
             let patientUid = cleanId;
@@ -134,6 +136,7 @@ Object.assign(window.firebaseService, {
     bindPatient: async (pairingPin) => {
         if (!isFirebaseEnabled || !db)
             throw new Error("Database not connected");
+        if (window.AuditLogger) window.AuditLogger.log('BIND_PATIENT', { uniqueId: pairingPin });
         const cleanPin = pairingPin ? pairingPin.trim().toUpperCase() : "";
         if (!/^GG-[A-Z0-9]{4}$/.test(cleanPin)) {
             console.error("Invalid PIN format.");
