@@ -60,13 +60,16 @@
 
 ---
 
-## ?? Security & Architecture Updates
+## 🔒 Security & Architecture Updates
 Following a comprehensive clinical architecture audit, the Dashboard has been heavily fortified:
 * **XSS Hardening:** The navigation engine implements strict regex-based allowlists, alphanumeric boundary constraints, and HTML-entity encoding to neutralize DOM-based Cross-Site Scripting (XSS) vectors.
-* **TypeScript Migration Pipeline:** The entire repository has been migrated to a modern, dual-watcher pipeline (
-pm run dev) that concurrently compiles strictly-typed TypeScript and Tailwind v4 CSS, enforcing cross-repository data contracts.
-* **Real-Time Telemetry Resolution:** The irebase-service intelligently binds patients via Secure PIN (GG-XXXX), executing polymorphic Firestore lookups that merge root profile datasets with real-time users/{uid}/telemetry subcollection streams to prevent data desynchronization.
-* **Mock-Free Production Readiness:** All prototype simulatedDatabase structures and static IoT Daemon mock arrays have been completely purged, ensuring the dashboard accurately reflects live, authenticated Gestation Guardian users.
+* **TypeScript Migration Pipeline:** The entire repository has been migrated to a modern, dual-watcher pipeline (`npm run dev`) that concurrently compiles strictly-typed TypeScript and Tailwind v4 CSS, enforcing cross-repository data contracts.
+* **Real-Time Telemetry Resolution:** The `firebase-service` intelligently binds patients via Secure PIN (GG-XXXX) or direct UID, executing polymorphic Firestore lookups that merge root profile datasets with real-time `users/{uid}/telemetry` subcollection streams to prevent data desynchronization.
+* **HIPAA Audit Logging:** A robust, non-blocking `AuditLogger` intercepts all patient data access events (`VIEW_PATIENT_LIST`, `VIEW_PATIENT_DETAIL`, `BIND_PATIENT`) and securely writes timestamped, attributed audit trails to a dedicated Firestore collection, ensuring regulatory accountability.
+* **Credentials Management Migration:** Firebase Admin SDK configuration has been successfully abstracted out of source code into secure, environment-variable-driven `.env` files for the backend sync daemon.
+* **Playwright E2E Test Suite:** The dashboard is now backed by a headless Playwright End-to-End testing suite (`tests/dashboard.spec.ts`) that asserts all critical clinical rendering paths, routing stability, and DOM loading integrity without regressions.
+* **Production UI States:** Comprehensive error-boundaries and empty-states have been embedded directly into the DOM (e.g., database connection loss, zero active patients, clinical ID resolution failure), guaranteeing zero silent crashes in clinical settings.
+* **Mock-Free Production Readiness:** All prototype `simulatedDatabase` structures and static IoT Daemon mock arrays have been completely purged, ensuring the dashboard accurately reflects live, authenticated Gestation Guardian users.
 
 ---
 ## ?? Local Development

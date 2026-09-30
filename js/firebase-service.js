@@ -133,23 +133,28 @@ Object.assign(window.firebaseService, {
             return { success: false, error: e.message };
         }
     },
-    bindPatient: async (pairingPin) => {
+    bindPatient: async (identifier) => {
         if (!isFirebaseEnabled || !db)
             throw new Error("Database not connected");
-        if (window.AuditLogger) window.AuditLogger.log('BIND_PATIENT', { uniqueId: pairingPin });
-        const cleanPin = pairingPin ? pairingPin.trim().toUpperCase() : "";
-        if (!/^GG-[A-Z0-9]{4}$/.test(cleanPin)) {
-            console.error("Invalid PIN format.");
-            throw new Error("Invalid PIN Format. Expected GG-XXXX");
-        }
-        console.log(`Resolving patient UID for PIN: '${cleanPin}'`);
+        if (window.AuditLogger) window.AuditLogger.log('BIND_PATIENT', { uniqueId: identifier });
+        
+        const cleanId = identifier ? identifier.trim() : "";
+        if (!cleanId) throw new Error("Invalid Identifier.");
+
+        let secureUid = cleanId;
+
+        console.log(`Resolving patient UID for: '${cleanId}'`);
         try {
-            const q = db.collection('users').where('pairingPin', '==', cleanPin).limit(1);
-            const snapshot = await q.get();
-            if (snapshot.empty) {
-                throw new Error("PatientNotFound: No patient registered with that PIN.");
+            // Check if it's a PIN format (GG-XXXX)
+            if (/^GG-[a-zA-Z0-9]{4}$/i.test(cleanId)) {
+                const q = db.collection('users').where('pairingPin', '==', cleanId.toUpperCase()).limit(1);
+                const snapshot = await q.get();
+                if (snapshot.empty) {
+                    throw new Error("PatientNotFound: No patient registered with that PIN.");
+                }
+                secureUid = snapshot.docs[0].id;
             }
-            const secureUid = snapshot.docs[0].id;
+
             console.log(`Binding to patient telemetry for UID: ${secureUid}`);
             db.collection('users').doc(secureUid).collection('telemetry')
                 .onSnapshot((telemetrySnapshot) => {
