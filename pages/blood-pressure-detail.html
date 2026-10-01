@@ -176,7 +176,7 @@
                             <span class="material-symbols-outlined text-primary p-2 bg-primary/10 rounded-xl" data-icon="sync">sync</span>
                             <h3 class="text-xl font-bold text-on-surface headline">Sync Operations</h3>
                         </div>
-                        <button class="group flex items-center gap-3 bg-gradient-to-r from-primary to-primary-container text-white px-6 py-3 rounded-full font-bold shadow-lg hover:shadow-primary/20 transition-all active:scale-95">
+                        <button id="btn-fetch-latest" class="group flex items-center gap-3 bg-gradient-to-r from-primary to-primary-container text-white px-6 py-3 rounded-full font-bold shadow-lg hover:shadow-primary/20 transition-all active:scale-95">
                             <span class="material-symbols-outlined text-xl group-hover:rotate-180 transition-transform duration-500" data-icon="sync_alt">sync_alt</span>
                             Fetch Latest Data
                         </button>
@@ -190,56 +190,7 @@
                                     <th class="px-8 py-5 text-[11px] font-bold text-outline uppercase tracking-widest text-right">Data Points Captured</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-outline-variant/5">
-                                <tr class="hover:bg-surface-container-low/50 transition-colors">
-                                    <td class="px-8 py-4">
-                                        <div class="flex flex-col">
-                                            <span class="text-sm font-bold text-on-surface">Oct 24, 2023 · 09:42 AM</span>
-                                            <span class="text-[10px] text-outline">Automatic device trigger</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-8 py-4">
-                                        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-tertiary/10 text-tertiary text-xs font-bold">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> Success
-                                        </div>
-                                    </td>
-                                    <td class="px-8 py-4 text-right">
-                                        <span class="text-sm font-black text-on-surface">14</span>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-surface-container-low/50 transition-colors">
-                                    <td class="px-8 py-4">
-                                        <div class="flex flex-col">
-                                            <span class="text-sm font-bold text-on-surface">Oct 24, 2023 · 08:15 AM</span>
-                                            <span class="text-[10px] text-outline">Manual practitioner fetch</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-8 py-4">
-                                        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary/10 text-secondary text-xs font-bold">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span> Pending
-                                        </div>
-                                    </td>
-                                    <td class="px-8 py-4 text-right">
-                                        <span class="text-sm font-black text-outline">—</span>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-surface-container-low/50 transition-colors">
-                                    <td class="px-8 py-4">
-                                        <div class="flex flex-col">
-                                            <span class="text-sm font-bold text-on-surface">Oct 23, 2023 · 11:55 PM</span>
-                                            <span class="text-[10px] text-outline">Routine nightly backup</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-8 py-4">
-                                        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-tertiary/10 text-tertiary text-xs font-bold">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> Success
-                                        </div>
-                                    </td>
-                                    <td class="px-8 py-4 text-right">
-                                        <span class="text-sm font-black text-on-surface">128</span>
-                                    </td>
-                                </tr>
-                            </tbody>
+                            <tbody class="divide-y divide-outline-variant/5"></tbody>
                         </table>
                     </div>
                 </div>
@@ -275,6 +226,7 @@
     <script src="../js/firebase-config.js"></script>
     <script src="../js/firebase-service.js"></script>
     <script src="../js/app.js"></script>
+    <script src="../js/detail-views.js"></script>
     
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
@@ -363,7 +315,16 @@
             document.getElementById('sidebar-target').innerHTML = html;
         });
 </script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        if (window.DetailViewController) {
+            window.DetailViewController.initBPDetailView();
+        }
+    });
+</script>
 </body>
+
 </html>
 
 
