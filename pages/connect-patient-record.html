@@ -211,6 +211,16 @@
                             btn.disabled = true;
 
                             try {
+                                // Wait for Firebase Auth to be ready before querying
+                                if (typeof firebase !== 'undefined' && !firebase.auth().currentUser) {
+                                    await new Promise((resolve) => {
+                                        const unsub = firebase.auth().onAuthStateChanged((user) => {
+                                            if (user) { unsub(); resolve(user); }
+                                        });
+                                        // Timeout after 3s to avoid hanging forever
+                                        setTimeout(() => resolve(null), 3000);
+                                    });
+                                }
                                 const patient = await window.firebaseService.getPatientById(idInput);
                                 if (!patient) {
                                     errorEl.innerText = "Clinical ID not found in database.";
@@ -221,7 +231,7 @@
                                     window.location.href = '../index.html?connectId=' + encodeURIComponent(idInput);
                                 }
                             } catch(err) {
-                                errorEl.innerText = "Error connecting to database.";
+                                errorEl.innerText = "Error: " + err.message;
                                 errorEl.classList.remove('hidden');
                                 btn.innerHTML = 'Connect Record <span class="material-symbols-outlined transition-transform group-hover:translate-x-1">arrow_forward</span>';
                                 btn.disabled = false;

@@ -14,6 +14,7 @@ function initFirebase(): void {
       firebase.initializeApp(config);
       db = firebase.firestore();
       isFirebaseEnabled = true;
+            firebase.auth().signInAnonymously().catch((e: any) => console.log('Anon auth skipped/failed', e));
       console.log("🔥 Firebase initialized successfully.");
     } catch (e) {
       console.error("Firebase initialization failed:", e);
