@@ -39,10 +39,6 @@ try {
 function fluctuateVitals(currentVitals) {
   const newVitals = { ...currentVitals };
   
-  // Prune legacy fields
-  delete newVitals.fetalHR;
-  delete newVitals.contractions;
-  
   // Maternal HR variance: +/- 3 BPM
   const mhrChange = Math.floor(Math.random() * 7) - 3;
   newVitals.maternalHR = Math.max(60, Math.min(120, (newVitals.maternalHR || 80) + mhrChange));
@@ -55,8 +51,6 @@ function fluctuateVitals(currentVitals) {
 
   return newVitals;
 }
-
-// Removed mockPatients array (BUG-006)
 
 async function syncPatientVitals() {
   console.log(`[${new Date().toISOString()}] Executing 15-minute Vitals Sync...`);

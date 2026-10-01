@@ -1,7 +1,6 @@
 "use strict";
 // src/ts/firebase-service.ts
 let db = null;
-let auth = null;
 let isFirebaseEnabled = false;
 function initFirebase() {
     const config = window.firebaseConfig;
@@ -9,7 +8,6 @@ function initFirebase() {
         try {
             firebase.initializeApp(config);
             db = firebase.firestore();
-            auth = firebase.auth();
             isFirebaseEnabled = true;
             console.log("🔥 Firebase initialized successfully.");
         }
@@ -28,7 +26,6 @@ Object.assign(window.firebaseService, {
     getPatients: async () => {
         if (!isFirebaseEnabled)
             throw new Error("DatabaseConnectionError: Firebase is not initialized");
-        if (window.AuditLogger) window.AuditLogger.log('VIEW_PATIENT_LIST', {});
         try {
             const snapshot = await db.collection('users').get();
             const patients = [];
@@ -48,7 +45,6 @@ Object.assign(window.firebaseService, {
             throw new Error("InvalidPatientIdentifier: Identifier is empty");
         if (!isFirebaseEnabled)
             throw new Error("DatabaseConnectionError: Firebase is not initialized");
-        if (window.AuditLogger) window.AuditLogger.log('VIEW_PATIENT_DETAIL', { patientId: cleanId });
         try {
             let patientData = null;
             let patientUid = cleanId;
@@ -136,16 +132,14 @@ Object.assign(window.firebaseService, {
     bindPatient: async (identifier) => {
         if (!isFirebaseEnabled || !db)
             throw new Error("Database not connected");
-        if (window.AuditLogger) window.AuditLogger.log('BIND_PATIENT', { uniqueId: identifier });
-        
+        if (window.AuditLogger)
+            window.AuditLogger.log('BIND_PATIENT', { uniqueId: identifier });
         const cleanId = identifier ? identifier.trim() : "";
-        if (!cleanId) throw new Error("Invalid Identifier.");
-
+        if (!cleanId)
+            throw new Error("Invalid Identifier.");
         let secureUid = cleanId;
-
         console.log(`Resolving patient UID for: '${cleanId}'`);
         try {
-            // Check if it's a PIN format (GG-XXXX)
             if (/^GG-[a-zA-Z0-9]{4}$/i.test(cleanId)) {
                 const q = db.collection('users').where('pairingPin', '==', cleanId.toUpperCase()).limit(1);
                 const snapshot = await q.get();
@@ -154,7 +148,6 @@ Object.assign(window.firebaseService, {
                 }
                 secureUid = snapshot.docs[0].id;
             }
-
             console.log(`Binding to patient telemetry for UID: ${secureUid}`);
             db.collection('users').doc(secureUid).collection('telemetry')
                 .onSnapshot((telemetrySnapshot) => {

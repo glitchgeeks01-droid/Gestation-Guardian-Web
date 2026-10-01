@@ -5,7 +5,6 @@
 declare var firebase: any;
 
 let db: any = null;
-let auth: any = null;
 let isFirebaseEnabled: boolean = false;
 
 function initFirebase(): void {
@@ -14,7 +13,6 @@ function initFirebase(): void {
     try {
       firebase.initializeApp(config);
       db = firebase.firestore();
-      auth = firebase.auth();
       isFirebaseEnabled = true;
       console.log("🔥 Firebase initialized successfully.");
     } catch (e) {
