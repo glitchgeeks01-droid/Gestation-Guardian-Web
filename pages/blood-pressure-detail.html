@@ -81,7 +81,7 @@
                     <nav class="flex gap-2 text-xs font-medium text-outline mb-2">
                         <span class="hover:text-primary cursor-pointer transition-colors">Patients</span>
                         <span>/</span>
-                        <span class="hover:text-primary cursor-pointer transition-colors">Alice R.</span>
+                        <a id="breadcrumb-patient" href="patient-detail" class="hover:text-primary cursor-pointer transition-colors">Loading...</a>
                         <span>/</span>
                         <span class="text-on-surface">Vitals</span>
                     </nav>
@@ -103,7 +103,7 @@
                     <div class="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none"></div>
                     <span class="text-xs font-bold text-outline tracking-widest uppercase mb-4">Latest Measurement</span>
                     <div class="flex items-baseline gap-2">
-                        <span class="text-8xl font-black tracking-tighter text-primary">120/80</span>
+                        <span id="bp-display" class="text-8xl font-black tracking-tighter text-primary">--/--</span>
                         <span class="text-lg font-bold text-outline">mmHg</span>
                     </div>
                     <div class="mt-6 flex items-center gap-2 px-3 py-1 bg-tertiary/10 text-tertiary rounded-full text-xs font-bold">
@@ -250,7 +250,7 @@
                     </div>
                     <div>
                         <h4 class="text-sm font-bold text-on-surface uppercase tracking-wider mb-1">Average MAP</h4>
-                        <p class="text-3xl font-black text-primary">93.3 <span class="text-xs font-bold text-outline">mmHg</span></p>
+                        <p class="text-3xl font-black text-primary"><span id="map-display">--</span> <span class="text-xs font-bold text-outline">mmHg</span></p>
                         <p class="text-[10px] font-medium text-outline mt-1">Mean Arterial Pressure (Optimal)</p>
                     </div>
                 </div>
@@ -260,7 +260,7 @@
                     </div>
                     <div>
                         <h4 class="text-sm font-bold text-on-surface uppercase tracking-wider mb-1">Resting Pulse</h4>
-                        <p class="text-3xl font-black text-primary">72 <span class="text-xs font-bold text-outline">BPM</span></p>
+                        <p class="text-3xl font-black text-primary"><span id="hr-display">--</span> <span class="text-xs font-bold text-outline">BPM</span></p>
                         <p class="text-[10px] font-medium text-outline mt-1">Consistency Rating: High</p>
                     </div>
                 </div>
@@ -268,7 +268,79 @@
         </div>
     </main>
 
+    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="../js/firebase-config.js"></script>
+    <script src="../js/firebase-service.js"></script>
     <script src="../js/app.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const patientId = urlParams.get('id');
+            
+            const breadcrumb = document.getElementById('breadcrumb-patient');
+            if (breadcrumb && patientId) {
+                breadcrumb.href = `patient-detail?id=${patientId}`;
+            }
+
+            if (!patientId || !window.firebaseService) return;
+
+            try {
+                const patient = await window.firebaseService.getPatientById(patientId);
+                if (breadcrumb) breadcrumb.innerText = patient.name || 'Unknown Patient';
+
+                // Fetch Telemetry for BP Details
+                const db = firebase.firestore();
+                const snapshot = await db.collection('users').doc(patient.id).collection('telemetry')
+                    .orderBy('effectiveDateTime', 'desc').limit(20).get();
+
+                let latestSys = null;
+                let latestDia = null;
+                let latestHR = null;
+
+                // Grab the very latest values
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const code = data.code?.coding?.[0]?.code;
+
+                    if (code === '85354-9' && (!latestSys || !latestDia)) {
+                        data.component?.forEach(comp => {
+                            if (comp.code?.coding?.[0]?.code === '8480-6') latestSys = comp.valueQuantity?.value;
+                            if (comp.code?.coding?.[0]?.code === '8462-4') latestDia = comp.valueQuantity?.value;
+                            if (comp.code?.coding?.[0]?.code === '8867-4' && !latestHR) latestHR = comp.valueQuantity?.value;
+                        });
+                    }
+                    if (code === '8867-4' && !latestHR) {
+                        latestHR = data.valueQuantity?.value;
+                    }
+                });
+
+                // Update UI
+                if (latestSys && latestDia) {
+                    const bpEl = document.getElementById('bp-display');
+                    if (bpEl) bpEl.innerText = `${latestSys}/${latestDia}`;
+
+                    // MAP Calculation: (Sys + 2*Dia) / 3
+                    const mapEl = document.getElementById('map-display');
+                    if (mapEl) {
+                        const mapVal = ((latestSys + (2 * latestDia)) / 3).toFixed(1);
+                        mapEl.innerText = mapVal;
+                    }
+                }
+
+                if (latestHR) {
+                    const hrEl = document.getElementById('hr-display');
+                    if (hrEl) hrEl.innerText = latestHR;
+                }
+
+            } catch (e) {
+                console.error("Error loading blood pressure data", e);
+            }
+        });
+    </script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const searchInput = document.getElementById('search-input');
