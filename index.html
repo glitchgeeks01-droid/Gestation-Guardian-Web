@@ -323,7 +323,10 @@ function openIntervention(id){
   const st=document.getElementById('panel-status');
   st.innerText=p.status || 'Stable';
   st.className= (p.status==='Critical' || p.status==='Red') ?'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-error text-white': (p.status==='Warning' || p.status==='Amber') ?'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-amber-500 text-white':'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-500 text-white';
-  document.getElementById('view-details-btn').onclick=()=>window.location.href=`pages/patient-detail.html?id=${p.id}`;
+  document.getElementById('view-details-btn').onclick=(e)=>{
+    e.preventDefault();
+    window.location.href=`pages/patient-detail.html?id=${p.id}`;
+  };
   document.getElementById('side-panel').classList.remove('translate-x-full');
   
 }

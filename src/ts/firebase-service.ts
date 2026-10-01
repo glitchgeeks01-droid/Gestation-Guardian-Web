@@ -57,13 +57,13 @@ Object.assign(window.firebaseService, {
       const docRef = db.collection('users').doc(cleanId);
       const docSnap = await docRef.get();
       if (docSnap.exists) {
-        patientData = { id: docSnap.id, ...docSnap.data() };
+        patientData = { ...docSnap.data(), id: docSnap.id };
       } else {
         // Secondary Lookup: Attempt to find by pairingPin
         const q = db.collection('users').where('pairingPin', '==', cleanId.toUpperCase()).limit(1);
         const snapshot = await q.get();
         if (!snapshot.empty) {
-          patientData = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+          patientData = { ...snapshot.docs[0].data(), id: snapshot.docs[0].id };
           patientUid = snapshot.docs[0].id;
         }
       }

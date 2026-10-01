@@ -8,26 +8,27 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Helper function to check if the user is a doctor (e.g. by checking custom claims)
-    // Note: requires setting custom claims via Firebase Admin SDK when a doctor registers
-    function isDoctor() {
-       return request.auth.token.role == 'doctor';
-    }
-
     match /users/{userId} {
-      // 1. Mobile App Users can only create or read their OWN profile
-      // 2. Doctors can read profiles if they have the specific PIN/UID (handled by querying)
-      //    To prevent unauthorized enumeration, we restrict listing all users.
-      allow read: if isAuthenticated() && (request.auth.uid == userId || isDoctor());
+      // Any authenticated user can read patient profiles.
+      // This allows the doctor dashboard (signed in anonymously) to query
+      // by pairingPin and fetch patient records.
+      // Write is restricted to the document owner only.
+      allow read: if isAuthenticated();
       allow write: if isAuthenticated() && request.auth.uid == userId;
 
       // Telemetry Subcollection
       match /telemetry/{logId} {
         // Patients can write telemetry to their own profile
-        // Doctors can read telemetry for patients they are authorized to view
+        // Any authenticated user (including doctors) can read telemetry
         allow create, update: if isAuthenticated() && request.auth.uid == userId;
-        allow read: if isAuthenticated() && (request.auth.uid == userId || isDoctor());
+        allow read: if isAuthenticated();
       }
+    }
+
+    // Audit Logs - any authenticated user can write (doctors logging access)
+    match /audit_logs/{logId} {
+      allow create: if isAuthenticated();
+      allow read: if false; // Only accessible via Admin SDK / Firebase Console
     }
   }
 }

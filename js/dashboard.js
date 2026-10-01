@@ -70,16 +70,56 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 });
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const params = new URLSearchParams(window.location.search);
     const connectId = params.get('connectId');
     if (connectId && window.firebaseService) {
         console.log('Connecting to patient:', connectId);
-        window.firebaseService.bindPatient(connectId);
-        // Open side panel with basic info so charts are visible
-        const sidePanel = document.getElementById('side-panel');
-        const panelName = document.getElementById('panel-name');
-        if (sidePanel) sidePanel.classList.remove('translate-x-full');
-        if (panelName) panelName.innerText = 'Patient: ' + connectId;
+        try {
+            // Wait for auth to be ready
+            if (typeof firebase !== 'undefined' && !firebase.auth().currentUser) {
+                await new Promise((resolve) => {
+                    const unsub = firebase.auth().onAuthStateChanged((user) => {
+                        if (user) { unsub(); resolve(user); }
+                    });
+                    setTimeout(() => resolve(null), 3000);
+                });
+            }
+            const patient = await window.firebaseService.getPatientById(connectId);
+            if (patient) {
+                window.firebaseService.bindPatient(connectId);
+                // Manually open the side panel and wire the button since we are bypassing the list click
+                const sidePanel = document.getElementById('side-panel');
+                const panelName = document.getElementById('panel-name');
+                const viewBtn = document.getElementById('view-details-btn');
+                
+                if (sidePanel) sidePanel.classList.remove('translate-x-full');
+                if (panelName) panelName.innerText = patient.name || 'Patient: ' + connectId;
+                
+                // CRITICAL FIX: The view-details button needs the internal document ID, not the PIN
+                if (viewBtn) {
+                    viewBtn.onclick = (e) => {
+                        e.preventDefault();
+                        if (patient && patient.id) {
+                            window.location.href = `pages/patient-detail.html?id=${patient.id}`;
+                        } else {
+                            console.error('Patient ID is missing');
+                        }
+                    };
+                }
+                
+                // If the global openIntervention exists and the list is loaded, use it to populate the rest of the UI
+                if (typeof openIntervention === 'function') {
+                    // Try immediately
+                    openIntervention(patient.id);
+                    // And try again in 1s just in case activePatients was still fetching
+                    setTimeout(() => openIntervention(patient.id), 1000);
+                }
+            } else {
+                console.warn('Patient not found for connectId:', connectId);
+            }
+        } catch(e) {
+            console.error('Failed to connect patient:', e);
+        }
     }
 });
