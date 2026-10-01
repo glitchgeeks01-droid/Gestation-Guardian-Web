@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     viewBtn.onclick = (e) => {
                         e.preventDefault();
                         if (patient && patient.id) {
-                            window.location.href = `pages/patient-detail.html?id=${patient.id}`;
+                            window.location.href = `pages/patient-detail?id=${patient.id}`;
                         } else {
                             console.error('Patient ID is missing');
                         }

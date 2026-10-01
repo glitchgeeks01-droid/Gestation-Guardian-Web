@@ -59,7 +59,7 @@ function injectMetricNav() {
 
     const tabs = metrics.map(m => {
         const isActive = cleanPage.includes(m.file);
-        const href = `${m.file}.html${qs}`;
+        const href = `${m.file}${qs}`;
         return `<a href="${href}"
             class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap
                    ${isActive
@@ -75,7 +75,7 @@ function injectMetricNav() {
 
     // Patient label for breadcrumb — use sanitized version to prevent XSS
     const patientLabel = sanitizeHTML(id || 'Patient');
-    const overviewHref = `patient-detail.html${qs}`;
+    const overviewHref = `patient-detail${qs}`;
 
     const navHTML = `
     <nav id="metric-nav" style="position:sticky;top:0;z-index:39;"

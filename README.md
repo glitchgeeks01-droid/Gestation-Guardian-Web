@@ -223,3 +223,6 @@ users/                          ← Patient profiles (shared with mobile app)
   <b>Observe. Intervene. Protect.</b>
 </div>
 
+
+> **Architectural Note on Routing:** The dashboard utilizes native "Clean URLs" (e.g., navigating to /pages/patient-detail instead of /pages/patient-detail.html). This is fully supported by 
+px serve and Firebase Hosting. Do not manually append .html to URLs, as it triggers 301 redirects that truncate required query parameters.
