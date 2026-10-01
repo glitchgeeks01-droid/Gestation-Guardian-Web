@@ -35,7 +35,7 @@ Object.assign(window.firebaseService, {
       const snapshot = await db.collection('users').get();
       const patients: PatientRecord[] = [];
       snapshot.forEach((doc: any) => {
-        patients.push({ id: doc.id, ...doc.data() } as PatientRecord);
+        patients.push({ ...doc.data(), id: doc.id } as PatientRecord);
       });
       return patients;
     } catch (e) {
