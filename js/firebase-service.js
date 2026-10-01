@@ -71,11 +71,12 @@ Object.assign(window.firebaseService, {
             // BUG-001 FIX: Fetch latest telemetry because the app writes to the subcollection, not the root doc
             try {
                 const telemetryQuery = await db.collection('users').doc(patientUid).collection('telemetry')
-                    .orderBy('effectiveDateTime', 'desc').limit(10).get();
+                    .orderBy('effectiveDateTime', 'desc').limit(50).get();
                 const vitals = patientData.vitals || {};
                 telemetryQuery.forEach((tDoc) => {
                     const data = tDoc.data();
                     const code = data.code?.coding?.[0]?.code;
+                    const txtCode = data.code?.text;
                     // BP Panel
                     if (code === '85354-9' && (!vitals.bpSys || !vitals.bpDia)) {
                         data.component?.forEach((comp) => {
@@ -95,12 +96,24 @@ Object.assign(window.firebaseService, {
                     else if (code === '8716-3') {
                         data.component?.forEach((comp) => {
                             const cCode = comp.code?.coding?.[0]?.code;
+                            const cText = comp.code?.text;
                             if (cCode === '29463-7' && !vitals.weight)
                                 vitals.weight = comp.valueQuantity?.value;
                             if (cCode === '2339-0' && !vitals.glucose)
                                 vitals.glucose = comp.valueQuantity?.value;
                             if (cCode === '8310-5' && !vitals.temperature)
                                 vitals.temperature = comp.valueQuantity?.value;
+                            if (cText === 'sleep' && !vitals.sleep)
+                                vitals.sleep = comp.valueString;
+                            if (cText === 'protein' && !vitals.protein)
+                                vitals.protein = comp.valueString;
+                        });
+                    }
+                    // Pseudo-FHIR Fallbacks (Kicks)
+                    else if (txtCode === 'gg_kick_sessions' && !vitals.kicks) {
+                        data.component?.forEach((comp) => {
+                            if (comp.code?.text === 'count')
+                                vitals.kicks = comp.valueString;
                         });
                     }
                 });

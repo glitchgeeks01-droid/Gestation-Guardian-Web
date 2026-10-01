@@ -53,6 +53,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 detailBp.innerHTML = `${sys} <span class="text-2xl text-slate-400 font-medium">/ ${dia}</span>`;
             }
         }
+        // General Vitals (LOINC: 8716-3)
+        else if (code === '8716-3') {
+            if (data.component) {
+                data.component.forEach(comp => {
+                    const cCode = comp.code?.coding?.[0]?.code;
+                    const cText = comp.code?.text;
+                    if (cCode === '29463-7') {
+                        const wEl = document.getElementById('detail-weight');
+                        if (wEl) wEl.innerHTML = `${comp.valueQuantity?.value} <span class="text-xs text-slate-400 font-medium">kg</span>`;
+                    }
+                    if (cText === 'sleep') {
+                        const sEl = document.getElementById('detail-sleep');
+                        if (sEl) sEl.innerHTML = `${comp.valueString} <span class="text-xs text-slate-400 font-medium">hrs</span>`;
+                    }
+                });
+            }
+        }
+        // Pseudo-FHIR Fallbacks (Kicks)
+        else if (data.code?.text === 'gg_kick_sessions') {
+            let count = '--';
+            if (data.component) {
+                data.component.forEach(comp => {
+                    if (comp.code?.text === 'count') count = comp.valueString;
+                });
+            }
+            const kEl = document.getElementById('detail-kicks');
+            if (kEl) kEl.innerHTML = `${count} <span class="text-xs text-slate-400 font-medium">kicks/hr</span>`;
+        }
     } 
     // Fallback for old flat JSON format
     else {
