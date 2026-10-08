@@ -198,41 +198,62 @@
                     </button>
 
                     <script>
+                        // Track active listener so repeated clicks don't stack listeners
+                        let _activeHandshakeUnsub = null;
+
                         async function handleConnect() {
-                            const idInput = document.getElementById('patient-id').value.trim();
+                            const pin = document.getElementById('patient-id').value.trim();
                             const errorEl = document.getElementById('connect-error');
                             const btn = document.getElementById('connect-btn');
                             
                             errorEl.classList.add('hidden');
-                            
-                            if(!idInput) return;
+                            if(!pin) return;
+
+                            // Tear down any previous listener before starting a new one
+                            if (_activeHandshakeUnsub) {
+                                _activeHandshakeUnsub();
+                                _activeHandshakeUnsub = null;
+                            }
                             
                             btn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span> Connecting...';
                             btn.disabled = true;
 
+                            // Create status UI dynamically if it doesn't exist
+                            let statusUI = document.getElementById('connection-status');
+                            if (!statusUI) {
+                                statusUI = document.createElement('p');
+                                statusUI.id = 'connection-status';
+                                statusUI.className = 'text-sm font-medium mt-2';
+                                errorEl.parentNode.insertBefore(statusUI, errorEl.nextSibling);
+                            }
+
                             try {
-                                // Wait for Firebase Auth to be ready before querying
-                                if (typeof firebase !== 'undefined' && !firebase.auth().currentUser) {
-                                    await new Promise((resolve) => {
-                                        const unsub = firebase.auth().onAuthStateChanged((user) => {
-                                            if (user) { unsub(); resolve(user); }
-                                        });
-                                        // Timeout after 3s to avoid hanging forever
-                                        setTimeout(() => resolve(null), 3000);
-                                    });
-                                }
-                                const patient = await window.firebaseService.getPatientById(idInput);
-                                if (!patient) {
-                                    errorEl.innerText = "Clinical ID not found in database.";
-                                    errorEl.classList.remove('hidden');
-                                    btn.innerHTML = 'Connect Record <span class="material-symbols-outlined transition-transform group-hover:translate-x-1">arrow_forward</span>';
-                                    btn.disabled = false;
-                                } else {
-                                    window.location.href = '../index.html?connectId=' + encodeURIComponent(idInput);
-                                }
+                                statusUI.innerHTML = `<span class="text-blue-500 animate-pulse">Waiting for patient to approve...</span>`;
+                                
+                                // Resolve provider display name from auth, fallback to generic
+                                const currentUser = firebase.auth().currentUser;
+                                const providerName = (currentUser && currentUser.displayName) ? currentUser.displayName : "Healthcare Provider";
+
+                                // Execute SYN
+                                const requestId = await window.firebaseService.initiatePairingHandshake(pin, providerName);
+                                
+                                // Await SYN-ACK and execute ACK — store unsub handle
+                                _activeHandshakeUnsub = window.firebaseService.listenForPairingResolution(
+                                    requestId,
+                                    (patientId) => {
+                                        _activeHandshakeUnsub = null;
+                                        statusUI.innerHTML = `<span class="text-emerald-500">Connection Approved! Redirecting...</span>`;
+                                        setTimeout(() => window.location.href = `../index.html?connectId=${encodeURIComponent(patientId)}`, 1000);
+                                    },
+                                    () => {
+                                        _activeHandshakeUnsub = null;
+                                        statusUI.innerHTML = `<span class="text-rose-500">Connection Denied by Patient.</span>`;
+                                        btn.innerHTML = 'Connect Record <span class="material-symbols-outlined transition-transform group-hover:translate-x-1">arrow_forward</span>';
+                                        btn.disabled = false;
+                                    }
+                                );
                             } catch(err) {
-                                errorEl.innerText = "Error: " + err.message;
-                                errorEl.classList.remove('hidden');
+                                statusUI.innerHTML = `<span class="text-rose-500">Error: ${err.message}</span>`;
                                 btn.innerHTML = 'Connect Record <span class="material-symbols-outlined transition-transform group-hover:translate-x-1">arrow_forward</span>';
                                 btn.disabled = false;
                             }
