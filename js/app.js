@@ -53,8 +53,8 @@ function injectMetricNav() {
 
     const metrics = [
         { file: 'patient-detail',       icon: 'person',           label: 'Overview'      },
-        { file: 'blood-pressure-detail',icon: 'sphygmomanometer', label: 'Blood Pressure'},
-        { file: 'heart-rate-detail',    icon: 'watch',            label: 'Maternal HR' },
+        { file: 'blood-pressure-detail',icon: 'blood_pressure', label: 'Blood Pressure'},
+        { file: 'heart-rate-detail',    icon: 'monitor_heart',            label: 'Maternal HR' },
     ];
 
     const tabs = metrics.map(m => {
@@ -78,7 +78,7 @@ function injectMetricNav() {
     const overviewHref = `patient-detail${qs}`;
 
     const navHTML = `
-    <nav id="metric-nav" style="position:sticky;top:0;z-index:39;"
+    <nav id="metric-nav" style="position:sticky;top:72px;z-index:39;"
          class="bg-white/90 backdrop-blur border-b border-slate-100 px-8 py-2.5 flex items-center gap-3 overflow-x-auto">
         <!-- Breadcrumb -->
         <div class="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium mr-3 shrink-0">
