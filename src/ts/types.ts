@@ -72,3 +72,42 @@ interface PatientRecord {
         };
     }
 
+
+/**
+ * Represents a discrete telemetry observation extracted from the historical FHIR feed.
+ */
+interface TelemetryDataPoint {
+    id: string;
+    timestamp: string | Date;
+    loincCode: string;
+    value?: number;
+    unit?: string;
+    components?: {
+        sys?: number;
+        dia?: number;
+        [key: string]: any;
+    };
+    rawCodeText?: string;
+}
+
+/**
+ * Represents an aggregated network sync event.
+ */
+interface SyncLogEntry {
+    syncId: string;
+    timestamp: string | Date;
+    status: 'Success' | 'Pending' | 'Failed';
+    dataPointsCaptured: number;
+    triggerType: 'Automatic device trigger' | 'Manual practitioner fetch' | 'Routine background sync';
+}
+
+/**
+ * Parameters for querying bounded temporal telemetry.
+ */
+interface TelemetryHistoryParams {
+    patientId: string;
+    loincCode?: string;
+    pseudoCode?: string;
+    timeWindowHours: number;
+    limit?: number;
+}

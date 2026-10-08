@@ -129,6 +129,85 @@ Object.assign(window.firebaseService, {
             throw e;
         }
     },
+    getTelemetryHistory: async (params, forceRefresh = false) => {
+        if (!isFirebaseEnabled)
+            throw new Error("DatabaseConnectionError: Firebase is not initialized");
+        const cutoff = new Date(Date.now() - params.timeWindowHours * 3600000).toISOString();
+        let query = db.collection('users').doc(params.patientId).collection('telemetry')
+            .where('effectiveDateTime', '>=', cutoff)
+            .orderBy('effectiveDateTime', 'asc');
+        if (params.limit) {
+            query = query.limit(params.limit);
+        }
+        const snapshot = await query.get({ source: forceRefresh ? 'server' : 'default' });
+        const results = [];
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            const code = data.code?.coding?.[0]?.code;
+            const rawText = data.code?.text;
+            // Filter logically if LOINC or PseudoCode was provided
+            if (params.loincCode && code !== params.loincCode && rawText !== params.loincCode)
+                return;
+            if (params.pseudoCode && rawText !== params.pseudoCode)
+                return;
+            const point = {
+                id: doc.id,
+                timestamp: data.effectiveDateTime || data.timestamp,
+                loincCode: code || '',
+                rawCodeText: rawText,
+                value: data.valueQuantity?.value,
+                unit: data.valueQuantity?.unit,
+            };
+            // Parse composite components if they exist (e.g., BP)
+            if (data.component && Array.isArray(data.component)) {
+                point.components = {};
+                data.component.forEach((comp) => {
+                    const subCode = comp.code?.coding?.[0]?.code || comp.code?.text;
+                    if (subCode === '8480-6')
+                        point.components.sys = comp.valueQuantity?.value;
+                    else if (subCode === '8462-4')
+                        point.components.dia = comp.valueQuantity?.value;
+                    else
+                        point.components[subCode] = comp.valueQuantity?.value || comp.valueString;
+                });
+            }
+            results.push(point);
+        });
+        return results;
+    },
+    getSyncLogs: async (patientId, limit = 5, forceRefresh = false) => {
+        if (!isFirebaseEnabled)
+            throw new Error("DatabaseConnectionError: Firebase is not initialized");
+        // We fetch the most recent N points and mathematically group them by 60s windows
+        const query = db.collection('users').doc(patientId).collection('telemetry')
+            .orderBy('effectiveDateTime', 'desc')
+            .limit(limit * 20); // Oversample to ensure we get enough batches
+        const snapshot = await query.get({ source: forceRefresh ? 'server' : 'default' });
+        const batches = {};
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            const rawTime = data.effectiveDateTime || data.timestamp;
+            if (!rawTime)
+                return;
+            // Truncate to the minute to cluster simultaneous syncs
+            const dateObj = new Date(rawTime);
+            const clusterKey = dateObj.toISOString().substring(0, 16);
+            if (!batches[clusterKey]) {
+                batches[clusterKey] = {
+                    syncId: `sync-${clusterKey}`,
+                    timestamp: dateObj,
+                    status: 'Success',
+                    dataPointsCaptured: 1,
+                    triggerType: 'Automatic device trigger'
+                };
+            }
+            else {
+                batches[clusterKey].dataPointsCaptured++;
+            }
+        });
+        const logs = Object.values(batches).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        return logs.slice(0, limit);
+    },
     login: async () => {
         if (!isFirebaseEnabled)
             return { success: false, error: "Firebase not configured." };
