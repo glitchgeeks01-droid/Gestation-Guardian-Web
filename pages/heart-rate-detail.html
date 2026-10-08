@@ -259,6 +259,21 @@
         if(window.DetailViewController && window.DetailViewController.initHRDetailView) {
             window.DetailViewController.initHRDetailView();
         }
+
+        // Listen for Spiderweb vibrations to automatically refresh
+        if (window.Spiderweb) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const patientId = urlParams.get('id');
+            
+            window.Spiderweb.listen('TELEMETRY_UPDATED', async (payload) => {
+                if (payload && payload.patientId === patientId) {
+                    console.log("🕸️ HR Detail caught vibration. Refreshing DOM in real-time...");
+                    if (window.DetailViewController) {
+                        window.DetailViewController.initHRDetailView();
+                    }
+                }
+            });
+        }
     });
 </script>
 </body>
