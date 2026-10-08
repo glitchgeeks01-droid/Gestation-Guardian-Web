@@ -240,56 +240,73 @@
 
             if (!patientId || !window.firebaseService) return;
 
-            try {
-                const patient = await window.firebaseService.getPatientById(patientId);
-                if (breadcrumb) breadcrumb.innerText = patient.name || 'Unknown Patient';
+            const loadBPData = async () => {
+                try {
+                    const patient = await window.firebaseService.getPatientById(patientId);
+                    if (breadcrumb) breadcrumb.innerText = patient.name || 'Unknown Patient';
 
-                // Fetch Telemetry for BP Details
-                const db = firebase.firestore();
-                const snapshot = await db.collection('users').doc(patient.id).collection('telemetry')
-                    .orderBy('effectiveDateTime', 'desc').limit(20).get();
+                    // Fetch Telemetry for BP Details
+                    const db = firebase.firestore();
+                    const snapshot = await db.collection('users').doc(patient.id).collection('telemetry')
+                        .orderBy('effectiveDateTime', 'desc').limit(20).get();
 
-                let latestSys = null;
-                let latestDia = null;
-                let latestHR = null;
+                    let latestSys = null;
+                    let latestDia = null;
+                    let latestHR = null;
 
-                // Grab the very latest values
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const code = data.code?.coding?.[0]?.code;
+                    // Grab the very latest values
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        const code = data.code?.coding?.[0]?.code;
 
-                    if (code === '85354-9' && (!latestSys || !latestDia)) {
-                        data.component?.forEach(comp => {
-                            if (comp.code?.coding?.[0]?.code === '8480-6') latestSys = comp.valueQuantity?.value;
-                            if (comp.code?.coding?.[0]?.code === '8462-4') latestDia = comp.valueQuantity?.value;
-                            if (comp.code?.coding?.[0]?.code === '8867-4' && !latestHR) latestHR = comp.valueQuantity?.value;
-                        });
+                        if (code === '85354-9' && (!latestSys || !latestDia)) {
+                            data.component?.forEach(comp => {
+                                if (comp.code?.coding?.[0]?.code === '8480-6') latestSys = comp.valueQuantity?.value;
+                                if (comp.code?.coding?.[0]?.code === '8462-4') latestDia = comp.valueQuantity?.value;
+                                if (comp.code?.coding?.[0]?.code === '8867-4' && !latestHR) latestHR = comp.valueQuantity?.value;
+                            });
+                        }
+                        if (code === '8867-4' && !latestHR) {
+                            latestHR = data.valueQuantity?.value;
+                        }
+                    });
+
+                    // Update UI
+                    if (latestSys && latestDia) {
+                        const bpEl = document.getElementById('bp-display');
+                        if (bpEl) bpEl.innerText = `${latestSys}/${latestDia}`;
+
+                        // MAP Calculation: (Sys + 2*Dia) / 3
+                        const mapEl = document.getElementById('map-display');
+                        if (mapEl) {
+                            const mapVal = ((latestSys + (2 * latestDia)) / 3).toFixed(1);
+                            mapEl.innerText = mapVal;
+                        }
                     }
-                    if (code === '8867-4' && !latestHR) {
-                        latestHR = data.valueQuantity?.value;
+
+                    if (latestHR) {
+                        const hrEl = document.getElementById('hr-display');
+                        if (hrEl) hrEl.innerText = latestHR;
+                    }
+
+                } catch (e) {
+                    console.error("Error loading blood pressure data", e);
+                }
+            };
+
+            await loadBPData();
+
+            // Listen for Spiderweb vibrations to automatically refresh
+            if (window.Spiderweb) {
+                window.Spiderweb.listen('TELEMETRY_UPDATED', async (payload) => {
+                    if (payload && payload.patientId === patientId) {
+                        console.log("🕸️ BP Detail caught vibration. Refreshing DOM in real-time...");
+                        await loadBPData();
+                        if (window.DetailViewController) {
+                            window.DetailViewController.initBPDetailView(); // Re-hydrate charts
+                        }
                     }
                 });
-
-                // Update UI
-                if (latestSys && latestDia) {
-                    const bpEl = document.getElementById('bp-display');
-                    if (bpEl) bpEl.innerText = `${latestSys}/${latestDia}`;
-
-                    // MAP Calculation: (Sys + 2*Dia) / 3
-                    const mapEl = document.getElementById('map-display');
-                    if (mapEl) {
-                        const mapVal = ((latestSys + (2 * latestDia)) / 3).toFixed(1);
-                        mapEl.innerText = mapVal;
-                    }
-                }
-
-                if (latestHR) {
-                    const hrEl = document.getElementById('hr-display');
-                    if (hrEl) hrEl.innerText = latestHR;
-                }
-
-            } catch (e) {
-                console.error("Error loading blood pressure data", e);
             }
         });
     </script>
