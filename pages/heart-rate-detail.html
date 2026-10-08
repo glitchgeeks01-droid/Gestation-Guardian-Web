@@ -36,7 +36,7 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
         }
         .bg-surface { background: #f0f4f9 !important; }
-    </style>
+    <script src="../js/spiderweb.js"></script>
     <link href="../css/output.css" rel="stylesheet">
 </head>
 <body class="bg-surface text-on-surface flex overflow-hidden selection:bg-primary-fixed selection:text-[#001d36]">
@@ -45,7 +45,7 @@
         <div class="absolute bottom-0 right-0 w-[700px] h-[700px] bg-teal-300 rounded-full blur-[150px] opacity-40"></div>
     </div>
 
-    <aside id="sidebar-target" class="h-screen w-64 fixed left-0 top-0 bg-[#f1f4f9] shadow-[0px_12px_32px_rgba(24,28,32,0.06)] flex flex-col py-8 gap-6 z-50"></aside>
+    <aside data-spiderweb="sidebar" class="h-screen w-64 fixed left-0 top-0 bg-[#f1f4f9] shadow-[0px_12px_32px_rgba(24,28,32,0.06)] flex flex-col py-8 gap-6 z-50"></aside>
 
     <main class="ml-64 flex-1 h-screen overflow-y-auto flex flex-col relative z-10">
         
@@ -252,13 +252,7 @@
             }
         });
     </script>
-<script>
-    fetch('../components/sidebar.html')
-        .then(res => res.text())
-        .then(html => {
-            document.getElementById('sidebar-target').innerHTML = html;
-        });
-</script>
+
 <script src="../js/detail-views.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", () => {

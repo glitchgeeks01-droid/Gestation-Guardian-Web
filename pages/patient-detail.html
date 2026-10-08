@@ -18,14 +18,13 @@
 
     <script src="../js/firebase-config.js"></script>
     <script src="../js/firebase-service.js"></script>
+    <script src="../js/spiderweb.js"></script>
     <link href="../css/output.css" rel="stylesheet">
 </head>
 <body class="flex overflow-hidden">
-    <aside id="sidebar-target" class="h-screen w-64 fixed left-0 top-0 bg-white border-r border-slate-200 flex flex-col py-8 z-50"></aside>
+    <aside data-spiderweb="sidebar" class="h-screen w-64 fixed left-0 top-0 bg-white border-r border-slate-200 flex flex-col py-8 z-50"></aside>
     <main class="ml-64 flex-1 h-screen overflow-y-auto flex flex-col relative">
-        <header class="flex justify-between items-center w-full px-10 py-5 sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200">
-            <button onclick="window.location.href='../index'" class="flex items-center gap-2 text-slate-500 hover:text-primary font-bold text-sm transition-colors"><span class="material-symbols-outlined">arrow_back</span> Back to Overview</button>
-        </header>
+        <div data-spiderweb="header-back"></div>
         <div id="loading-state" class="flex-1 flex flex-col items-center justify-center p-10 text-center mt-20">
             <span class="material-symbols-outlined text-5xl text-primary animate-spin mb-4">progress_activity</span>
             <h2 class="text-xl font-bold text-slate-700">Loading Patient Data...</h2>
@@ -137,42 +136,46 @@
         
 
         document.addEventListener("DOMContentLoaded", async () => {
-            try { document.getElementById('sidebar-target').innerHTML = await (await fetch('../components/sidebar.html')).text(); } catch (e) {}
-
+            // Spiderweb handles UI weaving automatically
             const urlParams = new URLSearchParams(window.location.search);
             let patientId = urlParams.get('id');
             if (patientId) { patientId = patientId.replace('/', ''); }
 
-            let patient = null;
-            const mainContainer = document.getElementById('main-content');
-            const loadingState = document.getElementById('loading-state');
+            const loadPatientData = async () => {
+                let patient = null;
+                const mainContainer = document.getElementById('main-content');
+                const loadingState = document.getElementById('loading-state');
 
-            // 1. Fetch real patient data from Firebase Firestore
-            try {
-                patient = await window.firebaseService.getPatientById(patientId);
-                if (!patient) throw new Error("Patient not found in database.");
-            } catch (err) {
-                console.error("Patient Detail Error:", err);
-                // Hide normal UI, show 404 State
+                // 1. Fetch real patient data from Firebase Firestore
+                try {
+                    patient = await window.firebaseService.getPatientById(patientId);
+                    if (!patient) throw new Error("Patient not found in database.");
+                } catch (err) {
+                    console.error("Patient Detail Error:", err);
+                    // Hide normal UI, show 404 State
+                    if (loadingState) loadingState.style.display = 'none';
+                    if (mainContainer) mainContainer.style.display = 'none';
+                    
+                    const mainArea = document.querySelector('main');
+                    // Remove existing error state if refreshing
+                    const existingError = document.getElementById('error-state');
+                    if (existingError) existingError.remove();
+
+                    mainArea.insertAdjacentHTML('beforeend', `
+                        <div id="error-state" class="flex-1 flex flex-col items-center justify-center p-10 text-center mt-20">
+                            <span class="material-symbols-outlined text-7xl text-slate-300 mb-6">patient_list</span>
+                            <h2 class="text-3xl font-black text-slate-900 tracking-tight font-headline mb-3">Patient Record Not Found</h2>
+                            <p class="text-slate-500 font-medium text-lg max-w-md mx-auto mb-8">The requested Clinical PIN or ID ("${patientId || 'Empty'}") does not exist, or you do not have authorization to view this telemetry stream.</p>
+                            <button onclick="window.location.href='../index'" class="bg-primary text-white font-bold py-3.5 px-8 rounded-xl hover:bg-primary/90 hover:shadow-lg transition-all flex items-center gap-2 mx-auto">
+                                <span class="material-symbols-outlined text-[18px]">arrow_back</span> Return to Dashboard
+                            </button>
+                        </div>
+                    `);
+                    return;
+                }
+
                 if (loadingState) loadingState.style.display = 'none';
-                if (mainContainer) mainContainer.style.display = 'none';
-                
-                const mainArea = document.querySelector('main');
-                mainArea.insertAdjacentHTML('beforeend', `
-                    <div id="error-state" class="flex-1 flex flex-col items-center justify-center p-10 text-center mt-20">
-                        <span class="material-symbols-outlined text-7xl text-slate-300 mb-6">patient_list</span>
-                        <h2 class="text-3xl font-black text-slate-900 tracking-tight font-headline mb-3">Patient Record Not Found</h2>
-                        <p class="text-slate-500 font-medium text-lg max-w-md mx-auto mb-8">The requested Clinical PIN or ID ("${patientId || 'Empty'}") does not exist, or you do not have authorization to view this telemetry stream.</p>
-                        <button onclick="window.location.href='../index'" class="bg-primary text-white font-bold py-3.5 px-8 rounded-xl hover:bg-primary/90 hover:shadow-lg transition-all flex items-center gap-2 mx-auto">
-                            <span class="material-symbols-outlined text-[18px]">arrow_back</span> Return to Dashboard
-                        </button>
-                    </div>
-                `);
-                return;
-            }
-
-            if (loadingState) loadingState.style.display = 'none';
-            if (mainContainer) mainContainer.classList.remove('hidden');
+                if (mainContainer) mainContainer.classList.remove('hidden');
 
             document.getElementById('detail-name').innerText = patient.name || 'Unknown Patient';
             document.getElementById('detail-id').innerText = patient.id;
@@ -274,6 +277,20 @@
                 document.getElementById('bp-warning').innerText = "Normal Range";
                 document.getElementById('mhr-warning').innerText = "Normal Range";
                 document.getElementById('mhr-warning').className = "text-xs font-bold uppercase flex items-center gap-1 text-slate-500";
+            }
+            };
+            
+            // Initial load
+            await loadPatientData();
+
+            // Listen for Spiderweb vibrations to automatically refresh
+            if (window.Spiderweb) {
+                window.Spiderweb.listen('TELEMETRY_UPDATED', async (payload) => {
+                    if (payload && payload.patientId === patientId) {
+                        console.log("🕸️ Patient Detail caught vibration. Refreshing DOM in real-time...");
+                        await loadPatientData();
+                    }
+                });
             }
         });
     </script>
