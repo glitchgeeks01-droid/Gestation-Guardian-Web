@@ -44,6 +44,16 @@
     </main>
 
     <script>
+        firebase.auth().getRedirectResult().then(function(result) {
+            if (result.user) {
+                window.location.href = 'index.html';
+            }
+        }).catch(function(error) {
+            const errorEl = document.getElementById('error-message');
+            errorEl.innerText = error.message;
+            errorEl.classList.remove('hidden');
+        });
+
         document.getElementById('google-login-btn').addEventListener('click', async (e) => {
             e.preventDefault();
             const errorEl = document.getElementById('error-message');
@@ -58,8 +68,10 @@
             if (result.success) {
                 window.location.href = 'index.html';
             } else {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
+                if (result.error !== "Redirecting to Google...") {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
                 errorEl.innerText = result.error || 'Authentication failed.';
                 errorEl.classList.remove('hidden');
             }

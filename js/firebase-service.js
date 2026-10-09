@@ -219,6 +219,12 @@ Object.assign(window.firebaseService, {
         }
         catch (e) {
             console.error("Google Auth failed:", e);
+            if (e.code === 'auth/popup-blocked') {
+                console.log("Popup blocked. Falling back to redirect...");
+                const provider = new firebase.auth.GoogleAuthProvider();
+                firebase.auth().signInWithRedirect(provider);
+                return { success: false, error: "Redirecting to Google..." };
+            }
             return { success: false, error: e.message };
         }
     },
