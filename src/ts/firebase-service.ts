@@ -308,6 +308,12 @@ Object.assign(window.firebaseService, {
       return { success: true, user: result.user };
     } catch (e: any) {
       console.error("Google Auth failed:", e);
+      if (e.code === 'auth/popup-blocked') {
+        console.log("Popup blocked. Falling back to redirect...");
+        const provider = new firebase.auth.GoogleAuthProvider();
+        firebase.auth().signInWithRedirect(provider);
+        return { success: false, error: "Redirecting to Google..." };
+      }
       return { success: false, error: e.message };
     }
   },
@@ -352,6 +358,56 @@ Object.assign(window.firebaseService, {
       console.error("Error binding patient:", e);
       throw e;
     }
+  },
+
+  getPatientByPin: async (pin: string): Promise<{ id: string } | null> => {
+    const cleanPin = pin ? pin.trim().toUpperCase() : "";
+    if (!cleanPin) return null;
+    const q = db.collection('users').where('pairingPin', '==', cleanPin).limit(1);
+    const snapshot = await q.get();
+    if (snapshot.empty) return null;
+    // Only return the document ID — never leak full patient PII before consent
+    return { id: snapshot.docs[0].id };
+  },
+
+  initiatePairingHandshake: async (pin: string, providerName: string): Promise<string> => {
+    // SECURITY: Reject unauthenticated providers — rules enforce providerId == auth.uid
+    if (!firebase.auth().currentUser) {
+      throw new Error("Provider must be authenticated before initiating a handshake.");
+    }
+
+    const patient = await (window as any).firebaseService.getPatientByPin(pin);
+    if (!patient) throw new Error("Invalid PIN");
+
+    const providerId = firebase.auth().currentUser.uid;
+
+    const requestRef = await db.collection('pairing_requests').add({
+      patientId: patient.id,
+      providerId: providerId,
+      providerName: providerName,
+      status: 'pending',
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    return requestRef.id;
+  },
+
+  listenForPairingResolution: (requestId: string, onApproved: (patientId: string) => void, onDenied: () => void): (() => void) => {
+    // Store the unsubscribe handle so we can clean up after resolution
+    const unsubscribe = db.collection('pairing_requests').doc(requestId)
+      .onSnapshot((doc: any) => {
+        const data = doc.data();
+        if (data?.status === 'approved') {
+          unsubscribe(); // Stop listening immediately
+          doc.ref.delete().catch((e: any) => console.warn('Cleanup delete failed:', e));
+          onApproved(data.patientId);
+        } else if (data?.status === 'denied') {
+          unsubscribe(); // Stop listening immediately
+          doc.ref.delete().catch((e: any) => console.warn('Cleanup delete failed:', e));
+          onDenied();
+        }
+      });
+    return unsubscribe;
   },
 
   calculateGestosisScore: (patient: PatientRecord): number => {

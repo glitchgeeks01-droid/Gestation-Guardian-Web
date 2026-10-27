@@ -58,8 +58,13 @@ interface PatientRecord {
             getIsFirebaseEnabled(): boolean;
             getPatients(): Promise<PatientRecord[]>;
             getPatientById(identifier: string): Promise<PatientRecord>;
+            getTelemetryHistory(params: TelemetryHistoryParams, forceRefresh?: boolean): Promise<TelemetryDataPoint[]>;
+            getSyncLogs(patientId: string, limit?: number, forceRefresh?: boolean): Promise<SyncLogEntry[]>;
             login(): Promise<{success: boolean, user?: any, error?: string}>;
             bindPatient(pairingPin: string): Promise<boolean | void>;
+            getPatientByPin(pin: string): Promise<{ id: string } | null>;
+            initiatePairingHandshake(pin: string, providerName: string): Promise<string>;
+            listenForPairingResolution(requestId: string, onApproved: (patientId: string) => void, onDenied: () => void): () => void;
             calculateGestosisScore(patient: PatientRecord): number;
             getGestosisRiskInfo(score: number): {
                 band: string;
