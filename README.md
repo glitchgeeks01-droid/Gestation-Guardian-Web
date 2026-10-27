@@ -108,14 +108,16 @@ Gestation Guardian (Patient)             Firebase Firestore             Doctor D
 3. Patient logs Heart Rate (72)  ──►  users/GG-XXXX/telemetry  ◄──  Real-time chart rendering
 ```
 
-1. A patient signs up in the **Gestation Guardian** mobile app. A unique Clinical ID (`GG-XXXX`) is generated and displayed on their profile page.
-2. The patient shares their Clinical ID with their healthcare provider.
-3. The doctor enters the ID into the **Connect Patient** dialog on this dashboard.
-4. The dashboard establishes a real-time Firestore `onSnapshot` listener on the patient's `users/{id}/telemetry` subcollection.
-5. Every new vital sign logged by the patient is automatically received, parsed as an HL7 FHIR Observation, and rendered on the clinical charts within seconds.
+1. **Patient Registration & PIN Generation:** A patient signs up in the **Gestation Guardian** mobile app. A unique Clinical PIN (GG-XXXX) is generated and securely synced to Firestore.
+2. **Provider Pairing Initiation (SYN):** The doctor enters the PIN into the **Connect Patient** dialog. The dashboard resolves all candidate session UIDs for that PIN (handling device reinstalls seamlessly) and issues a pending pairing_requests entry.
+3. **Patient Authorization & In-App Prompt (SYN-ACK):** The patient's mobile app receives the pairing request in real-time and presents an immediate in-app confirmation modal (UI.showConfirm), allowing the patient to explicitly **Approve** or **Deny** access.
+4. **Connection Resolution & Consent Tracking (ACK):**
+   - Upon patient approval, pairing_requests transitions to pproved, the patient document is permanently marked with connected: true, and the dashboard adds the patient to its verified connected roster.
+   - **Privacy Boundary Enforced:** Unconnected patient records in Firestore are strictly filtered out and never displayed prematurely on the clinical dashboard until the patient grants consent.
+5. **Real-Time Telemetry Stream:** The dashboard establishes a real-time Firestore onSnapshot listener on the patient's users/{id}/telemetry subcollection, aggregating historical observations and streaming live vital sign updates directly to the clinical charts.
 
-### Shared Database Architecture
-Both the Gestation Guardian mobile app and this Doctor Dashboard connect to the **same Firebase project** (`gg-doctor-dashboard`). Patient profiles are stored in the `users` collection, and all telemetry flows through `users/{patientId}/telemetry` subcollections.
+### Shared Database Architecture & Session Deduplication
+Both the Gestation Guardian mobile app and this Doctor Dashboard connect to the **same Firebase project** (gg-doctor-dashboard). Patient profiles are stored in the users collection, with telemetry flowing through users/{patientId}/telemetry subcollections. The dashboard automatically deduplicates multi-session documents by normalized email and pairing PIN, ensuring historical records and active device sessions remain unified under a single clinical card.
 
 ---
 
