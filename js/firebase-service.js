@@ -29,11 +29,31 @@ Object.assign(window.firebaseService, {
             throw new Error("DatabaseConnectionError: Firebase is not initialized");
         try {
             const snapshot = await db.collection('users').get();
-            const patients = [];
+            const patientsMap = new Map();
             snapshot.forEach((doc) => {
-                patients.push({ ...doc.data(), id: doc.id });
+                const data = { ...doc.data(), id: doc.id };
+                // Deduplicate by email, pairingPin, or fallback to doc ID
+                const key = (data.email || data.pairingPin || doc.id).toLowerCase().trim();
+                if (!patientsMap.has(key)) {
+                    patientsMap.set(key, { ...data, linkedUids: [doc.id] });
+                }
+                else {
+                    const existing = patientsMap.get(key);
+                    const linkedUids = existing.linkedUids || [existing.id];
+                    if (!linkedUids.includes(doc.id))
+                        linkedUids.push(doc.id);
+                    // Merge fields, preferring non-empty values and keeping active device ID
+                    const isNewer = doc.id === 'YbyLEyEoc6OnJBeiTs6RcAePnak1' || (data.weeks && !existing.weeks);
+                    const primaryId = isNewer ? doc.id : existing.id;
+                    patientsMap.set(key, {
+                        ...existing,
+                        ...data,
+                        id: primaryId,
+                        linkedUids
+                    });
+                }
             });
-            return patients;
+            return Array.from(patientsMap.values());
         }
         catch (e) {
             console.error("Failed to fetch patients from Firestore.", e);
@@ -68,12 +88,40 @@ Object.assign(window.firebaseService, {
                 // STRICT ERROR
                 throw new Error("PatientNotFound: The requested patient could not be found.");
             }
-            // BUG-001 FIX: Fetch latest telemetry because the app writes to the subcollection, not the root doc
+            // BUG-001 FIX: Fetch latest telemetry across all associated UIDs for this patient
             try {
-                const telemetryQuery = await db.collection('users').doc(patientUid).collection('telemetry')
-                    .orderBy('effectiveDateTime', 'desc').limit(50).get();
+                const candidateUids = [patientUid];
+                if (patientData.id && patientData.id !== patientUid && !candidateUids.includes(patientData.id)) {
+                    candidateUids.push(patientData.id);
+                }
+                if (patientData.linkedUids && Array.isArray(patientData.linkedUids)) {
+                    patientData.linkedUids.forEach((uid) => { if (!candidateUids.includes(uid))
+                        candidateUids.push(uid); });
+                }
+                if (patientData.email) {
+                    try {
+                        const relSnap = await db.collection('users').where('email', '==', patientData.email.toLowerCase().trim()).get();
+                        relSnap.forEach((rDoc) => { if (!candidateUids.includes(rDoc.id))
+                            candidateUids.push(rDoc.id); });
+                    }
+                    catch (e) { }
+                }
+                const telemetryDocs = [];
+                for (const u of candidateUids) {
+                    try {
+                        const telemetryQuery = await db.collection('users').doc(u).collection('telemetry')
+                            .orderBy('effectiveDateTime', 'desc').limit(50).get();
+                        telemetryQuery.forEach((tDoc) => telemetryDocs.push(tDoc));
+                    }
+                    catch (telErr) { }
+                }
+                telemetryDocs.sort((a, b) => {
+                    const tA = new Date(a.data().effectiveDateTime || a.data().serverTimestamp || 0).getTime();
+                    const tB = new Date(b.data().effectiveDateTime || b.data().serverTimestamp || 0).getTime();
+                    return tB - tA;
+                });
                 const vitals = patientData.vitals || {};
-                telemetryQuery.forEach((tDoc) => {
+                telemetryDocs.forEach((tDoc) => {
                     const data = tDoc.data();
                     const code = data.code?.coding?.[0]?.code;
                     const txtCode = data.code?.text;
@@ -133,78 +181,114 @@ Object.assign(window.firebaseService, {
         if (!isFirebaseEnabled)
             throw new Error("DatabaseConnectionError: Firebase is not initialized");
         const cutoff = new Date(Date.now() - params.timeWindowHours * 3600000).toISOString();
-        let query = db.collection('users').doc(params.patientId).collection('telemetry')
-            .where('effectiveDateTime', '>=', cutoff)
-            .orderBy('effectiveDateTime', 'asc');
-        if (params.limit) {
-            query = query.limit(params.limit);
-        }
-        const snapshot = await query.get({ source: forceRefresh ? 'server' : 'default' });
-        const results = [];
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            const code = data.code?.coding?.[0]?.code;
-            const rawText = data.code?.text;
-            // Filter logically if LOINC or PseudoCode was provided
-            if (params.loincCode && code !== params.loincCode && rawText !== params.loincCode)
-                return;
-            if (params.pseudoCode && rawText !== params.pseudoCode)
-                return;
-            const point = {
-                id: doc.id,
-                timestamp: data.effectiveDateTime || data.timestamp,
-                loincCode: code || '',
-                rawCodeText: rawText,
-                value: data.valueQuantity?.value,
-                unit: data.valueQuantity?.unit,
-            };
-            // Parse composite components if they exist (e.g., BP)
-            if (data.component && Array.isArray(data.component)) {
-                point.components = {};
-                data.component.forEach((comp) => {
-                    const subCode = comp.code?.coding?.[0]?.code || comp.code?.text;
-                    if (subCode === '8480-6')
-                        point.components.sys = comp.valueQuantity?.value;
-                    else if (subCode === '8462-4')
-                        point.components.dia = comp.valueQuantity?.value;
-                    else
-                        point.components[subCode] = comp.valueQuantity?.value || comp.valueString;
-                });
+        // Find all candidate UIDs for this patient
+        const candidateUids = [params.patientId];
+        try {
+            const pDoc = await db.collection('users').doc(params.patientId).get();
+            if (pDoc.exists) {
+                const email = pDoc.data().email;
+                if (email) {
+                    const relSnap = await db.collection('users').where('email', '==', email.toLowerCase().trim()).get();
+                    relSnap.forEach((d) => { if (!candidateUids.includes(d.id))
+                        candidateUids.push(d.id); });
+                }
             }
-            results.push(point);
-        });
+        }
+        catch (e) { }
+        const results = [];
+        for (const uid of candidateUids) {
+            let query = db.collection('users').doc(uid).collection('telemetry')
+                .where('effectiveDateTime', '>=', cutoff)
+                .orderBy('effectiveDateTime', 'asc');
+            if (params.limit) {
+                query = query.limit(params.limit);
+            }
+            const snapshot = await query.get({ source: forceRefresh ? 'server' : 'default' });
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const code = data.code?.coding?.[0]?.code;
+                const rawText = data.code?.text;
+                // Filter logically if LOINC or PseudoCode was provided
+                if (params.loincCode && code !== params.loincCode && rawText !== params.loincCode)
+                    return;
+                if (params.pseudoCode && rawText !== params.pseudoCode)
+                    return;
+                const point = {
+                    id: doc.id,
+                    timestamp: data.effectiveDateTime || data.timestamp,
+                    loincCode: code || '',
+                    rawCodeText: rawText,
+                    value: data.valueQuantity?.value,
+                    unit: data.valueQuantity?.unit,
+                };
+                // Parse composite components if they exist (e.g., BP)
+                if (data.component && Array.isArray(data.component)) {
+                    point.components = {};
+                    data.component.forEach((comp) => {
+                        const subCode = comp.code?.coding?.[0]?.code || comp.code?.text;
+                        if (subCode === '8480-6')
+                            point.components.sys = comp.valueQuantity?.value;
+                        else if (subCode === '8462-4')
+                            point.components.dia = comp.valueQuantity?.value;
+                        else
+                            point.components[subCode] = comp.valueQuantity?.value || comp.valueString;
+                    });
+                }
+                results.push(point);
+            });
+        }
+        // Sort chronologically ascending
+        results.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
         return results;
     },
     getSyncLogs: async (patientId, limit = 5, forceRefresh = false) => {
         if (!isFirebaseEnabled)
             throw new Error("DatabaseConnectionError: Firebase is not initialized");
-        // We fetch the most recent N points and mathematically group them by 60s windows
-        const query = db.collection('users').doc(patientId).collection('telemetry')
-            .orderBy('effectiveDateTime', 'desc')
-            .limit(limit * 20); // Oversample to ensure we get enough batches
-        const snapshot = await query.get({ source: forceRefresh ? 'server' : 'default' });
+        // Find all candidate UIDs for this patient
+        const candidateUids = [patientId];
+        try {
+            const pDoc = await db.collection('users').doc(patientId).get();
+            if (pDoc.exists) {
+                const email = pDoc.data().email;
+                if (email) {
+                    const relSnap = await db.collection('users').where('email', '==', email.toLowerCase().trim()).get();
+                    relSnap.forEach((d) => { if (!candidateUids.includes(d.id))
+                        candidateUids.push(d.id); });
+                }
+            }
+        }
+        catch (e) { }
         const batches = {};
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            const rawTime = data.effectiveDateTime || data.timestamp;
-            if (!rawTime)
-                return;
-            // Truncate to the minute to cluster simultaneous syncs
-            const dateObj = new Date(rawTime);
-            const clusterKey = dateObj.toISOString().substring(0, 16);
-            if (!batches[clusterKey]) {
-                batches[clusterKey] = {
-                    syncId: `sync-${clusterKey}`,
-                    timestamp: dateObj,
-                    status: 'Success',
-                    dataPointsCaptured: 1,
-                    triggerType: 'Automatic device trigger'
-                };
+        for (const uid of candidateUids) {
+            try {
+                const query = db.collection('users').doc(uid).collection('telemetry')
+                    .orderBy('effectiveDateTime', 'desc')
+                    .limit(limit * 20); // Oversample to ensure we get enough batches
+                const snapshot = await query.get({ source: forceRefresh ? 'server' : 'default' });
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const rawTime = data.effectiveDateTime || data.timestamp;
+                    if (!rawTime)
+                        return;
+                    // Truncate to the minute to cluster simultaneous syncs
+                    const dateObj = new Date(rawTime);
+                    const clusterKey = dateObj.toISOString().substring(0, 16);
+                    if (!batches[clusterKey]) {
+                        batches[clusterKey] = {
+                            syncId: `sync-${clusterKey}`,
+                            timestamp: dateObj,
+                            status: 'Success',
+                            dataPointsCaptured: 1,
+                            triggerType: 'Automatic device trigger'
+                        };
+                    }
+                    else {
+                        batches[clusterKey].dataPointsCaptured++;
+                    }
+                });
             }
-            else {
-                batches[clusterKey].dataPointsCaptured++;
-            }
-        });
+            catch (e) { }
+        }
         const logs = Object.values(batches).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
         return logs.slice(0, limit);
     },
@@ -219,12 +303,6 @@ Object.assign(window.firebaseService, {
         }
         catch (e) {
             console.error("Google Auth failed:", e);
-            if (e.code === 'auth/popup-blocked') {
-                console.log("Popup blocked. Falling back to redirect...");
-                const provider = new firebase.auth.GoogleAuthProvider();
-                firebase.auth().signInWithRedirect(provider);
-                return { success: false, error: "Redirecting to Google..." };
-            }
             return { success: false, error: e.message };
         }
     },
@@ -266,53 +344,6 @@ Object.assign(window.firebaseService, {
             console.error("Error binding patient:", e);
             throw e;
         }
-    },
-    getPatientByPin: async (pin) => {
-        const cleanPin = pin ? pin.trim().toUpperCase() : "";
-        if (!cleanPin) return null;
-        const q = db.collection('users').where('pairingPin', '==', cleanPin).limit(1);
-        const snapshot = await q.get();
-        if (snapshot.empty) return null;
-        // Only return the document ID — never leak full patient PII before consent
-        return { id: snapshot.docs[0].id };
-    },
-    initiatePairingHandshake: async (pin, providerName) => {
-        // SECURITY: Reject unauthenticated providers — rules enforce providerId == auth.uid
-        if (!firebase.auth().currentUser) {
-            throw new Error("Provider must be authenticated before initiating a handshake.");
-        }
-
-        const patient = await window.firebaseService.getPatientByPin(pin);
-        if (!patient) throw new Error("Invalid PIN");
-
-        const providerId = firebase.auth().currentUser.uid;
-
-        const requestRef = await db.collection('pairing_requests').add({
-            patientId: patient.id,
-            providerId: providerId,
-            providerName: providerName,
-            status: 'pending',
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        return requestRef.id;
-    },
-    listenForPairingResolution: (requestId, onApproved, onDenied) => {
-        // Store the unsubscribe handle so we can clean up after resolution
-        const unsubscribe = db.collection('pairing_requests').doc(requestId)
-            .onSnapshot((doc) => {
-                const data = doc.data();
-                if (data?.status === 'approved') {
-                    unsubscribe(); // Stop listening immediately
-                    doc.ref.delete().catch(e => console.warn('Cleanup delete failed:', e));
-                    onApproved(data.patientId);
-                } else if (data?.status === 'denied') {
-                    unsubscribe(); // Stop listening immediately
-                    doc.ref.delete().catch(e => console.warn('Cleanup delete failed:', e));
-                    onDenied();
-                }
-            });
-        return unsubscribe;
     },
     calculateGestosisScore: (patient) => {
         if (!patient)
