@@ -363,6 +363,18 @@ Object.assign(window.firebaseService, {
         return { id: snapshot.docs[0].id };
     },
     initiatePairingHandshake: async (pin, providerName) => {
+        // If not authenticated yet, wait briefly for auth state to resolve
+        if (!firebase.auth().currentUser) {
+            await new Promise((resolve) => {
+                const unsub = firebase.auth().onAuthStateChanged((user) => {
+                    if (user) {
+                        unsub();
+                        resolve(user);
+                    }
+                });
+                setTimeout(() => resolve(null), 3000);
+            });
+        }
         // SECURITY: Reject unauthenticated providers — rules enforce providerId == auth.uid
         if (!firebase.auth().currentUser) {
             throw new Error("Provider must be authenticated before initiating a handshake.");

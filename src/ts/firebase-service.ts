@@ -371,6 +371,16 @@ Object.assign(window.firebaseService, {
   },
 
   initiatePairingHandshake: async (pin: string, providerName: string): Promise<string> => {
+    // If not authenticated yet, wait briefly for auth state to resolve
+    if (!firebase.auth().currentUser) {
+      await new Promise((resolve) => {
+        const unsub = firebase.auth().onAuthStateChanged((user: any) => {
+          if (user) { unsub(); resolve(user); }
+        });
+        setTimeout(() => resolve(null), 3000);
+      });
+    }
+
     // SECURITY: Reject unauthenticated providers — rules enforce providerId == auth.uid
     if (!firebase.auth().currentUser) {
       throw new Error("Provider must be authenticated before initiating a handshake.");
