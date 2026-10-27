@@ -46,6 +46,8 @@ interface PatientRecord {
     gestosisScore?: number;
     vitals?: TelemetryData;
     medicalHistory?: MedicalHistory;
+    connected?: boolean;
+    connectedAt?: string;
     
     createdAt?: string | Date | any; // Any allows for Firebase FieldValue.serverTimestamp()
 }
@@ -63,8 +65,10 @@ interface PatientRecord {
             login(): Promise<{success: boolean, user?: any, error?: string}>;
             bindPatient(pairingPin: string): Promise<boolean | void>;
             getPatientByPin(pin: string): Promise<{ id: string } | null>;
-            initiatePairingHandshake(pin: string, providerName: string): Promise<string>;
-            listenForPairingResolution(requestId: string, onApproved: (patientId: string) => void, onDenied: () => void): () => void;
+            getPatientCandidateUidsByPin(pin: string): Promise<string[]>;
+            initiatePairingHandshake(pin: string, providerName: string): Promise<string[] | string>;
+            listenForPairingResolution(requestIdOrIds: string | string[], onApproved: (patientId: string) => void, onDenied: () => void): () => void;
+            markPatientConnected(patientId: string): void;
             calculateGestosisScore(patient: PatientRecord): number;
             getGestosisRiskInfo(score: number): {
                 band: string;

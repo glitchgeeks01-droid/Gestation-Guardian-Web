@@ -35,10 +35,35 @@ Object.assign(window.firebaseService, {
       const snapshot = await db.collection('users').get();
       const patientsMap = new Map<string, PatientRecord>();
       
+      // Load connected IDs from localStorage
+      let connectedIds: string[] = [];
+      try {
+        const stored = localStorage.getItem('gg_connected_patients');
+        if (stored) {
+          connectedIds = JSON.parse(stored);
+        } else {
+          // Pre-seed with established baseline patients
+          connectedIds = ['tRfTYUvf9IfMDe55p7TWtY1zF1i2', 'GG-X968', 'glitchgeeks01@gmail.com', 'GG-DA0Y', 'GG-ODP6'];
+          localStorage.setItem('gg_connected_patients', JSON.stringify(connectedIds));
+        }
+      } catch(e) {}
+
       snapshot.forEach((doc: any) => {
         const data = { ...doc.data(), id: doc.id } as PatientRecord;
-        // Deduplicate by email, pairingPin, or fallback to doc ID
         const key = ((data as any).email || (data as any).pairingPin || doc.id).toLowerCase().trim();
+
+        // Check if patient is connected:
+        // 1. Explicitly approved by patient (data.connected === true)
+        // 2. Or present in the provider's connected patients list
+        const isConnected = data.connected === true ||
+          connectedIds.includes(doc.id) ||
+          (data.pairingPin && connectedIds.includes(data.pairingPin)) ||
+          ((data as any).email && connectedIds.includes((data as any).email.toLowerCase().trim()));
+
+        if (!isConnected) {
+          // Do NOT render unapproved/unconnected patients prematurely
+          return;
+        }
         
         if (!patientsMap.has(key)) {
           patientsMap.set(key, { ...data, linkedUids: [doc.id] } as any);
@@ -360,17 +385,41 @@ Object.assign(window.firebaseService, {
     }
   },
 
-  getPatientByPin: async (pin: string): Promise<{ id: string } | null> => {
-    const cleanPin = pin ? pin.trim().toUpperCase() : "";
-    if (!cleanPin) return null;
-    const q = db.collection('users').where('pairingPin', '==', cleanPin).limit(1);
-    const snapshot = await q.get();
-    if (snapshot.empty) return null;
-    // Only return the document ID — never leak full patient PII before consent
-    return { id: snapshot.docs[0].id };
+  markPatientConnected: (patientId: string): void => {
+    try {
+      let connectedIds: string[] = [];
+      const stored = localStorage.getItem('gg_connected_patients');
+      if (stored) {
+        connectedIds = JSON.parse(stored);
+      } else {
+        connectedIds = ['tRfTYUvf9IfMDe55p7TWtY1zF1i2', 'GG-X968', 'glitchgeeks01@gmail.com', 'GG-DA0Y', 'GG-ODP6'];
+      }
+      if (!connectedIds.includes(patientId)) {
+        connectedIds.push(patientId);
+        localStorage.setItem('gg_connected_patients', JSON.stringify(connectedIds));
+      }
+    } catch(e) {}
   },
 
-  initiatePairingHandshake: async (pin: string, providerName: string): Promise<string> => {
+  getPatientCandidateUidsByPin: async (pin: string): Promise<string[]> => {
+    const cleanPin = pin ? pin.trim().toUpperCase() : "";
+    if (!cleanPin) return [];
+    const q = db.collection('users').where('pairingPin', '==', cleanPin);
+    const snapshot = await q.get();
+    const uids: string[] = [];
+    snapshot.forEach((d: any) => {
+      if (!uids.includes(d.id)) uids.push(d.id);
+    });
+    return uids;
+  },
+
+  getPatientByPin: async (pin: string): Promise<{ id: string } | null> => {
+    const candidateUids = await (window as any).firebaseService.getPatientCandidateUidsByPin(pin);
+    if (!candidateUids || candidateUids.length === 0) return null;
+    return { id: candidateUids[0] };
+  },
+
+  initiatePairingHandshake: async (pin: string, providerName: string): Promise<string[] | string> => {
     // If not authenticated yet, wait briefly for auth state to resolve
     if (!firebase.auth().currentUser) {
       await new Promise((resolve) => {
@@ -386,38 +435,62 @@ Object.assign(window.firebaseService, {
       throw new Error("Provider must be authenticated before initiating a handshake.");
     }
 
-    const patient = await (window as any).firebaseService.getPatientByPin(pin);
-    if (!patient) throw new Error("Invalid PIN");
+    const candidateUids = await (window as any).firebaseService.getPatientCandidateUidsByPin(pin);
+    if (!candidateUids || candidateUids.length === 0) throw new Error("Invalid PIN: No patient found with that PIN.");
 
     const providerId = firebase.auth().currentUser.uid;
+    const requestIds: string[] = [];
 
-    const requestRef = await db.collection('pairing_requests').add({
-      patientId: patient.id,
-      providerId: providerId,
-      providerName: providerName,
-      status: 'pending',
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    // Create a pairing request for each candidate session UID so the active device session receives it
+    for (const pUid of candidateUids) {
+      const requestRef = await db.collection('pairing_requests').add({
+        patientId: pUid,
+        providerId: providerId,
+        providerName: providerName,
+        status: 'pending',
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      requestIds.push(requestRef.id);
+    }
 
-    return requestRef.id;
+    return requestIds.length === 1 ? requestIds[0] : requestIds;
   },
 
-  listenForPairingResolution: (requestId: string, onApproved: (patientId: string) => void, onDenied: () => void): (() => void) => {
-    // Store the unsubscribe handle so we can clean up after resolution
-    const unsubscribe = db.collection('pairing_requests').doc(requestId)
-      .onSnapshot((doc: any) => {
-        const data = doc.data();
-        if (data?.status === 'approved') {
-          unsubscribe(); // Stop listening immediately
-          doc.ref.delete().catch((e: any) => console.warn('Cleanup delete failed:', e));
-          onApproved(data.patientId);
-        } else if (data?.status === 'denied') {
-          unsubscribe(); // Stop listening immediately
-          doc.ref.delete().catch((e: any) => console.warn('Cleanup delete failed:', e));
-          onDenied();
-        }
+  listenForPairingResolution: (requestIdOrIds: string | string[], onApproved: (patientId: string) => void, onDenied: () => void): (() => void) => {
+    const ids = Array.isArray(requestIdOrIds) ? requestIdOrIds : [requestIdOrIds];
+    const unsubs: (() => void)[] = [];
+    let resolved = false;
+
+    const cleanupAll = () => {
+      unsubs.forEach(u => { try { u(); } catch(e) {} });
+      ids.forEach(id => {
+        db.collection('pairing_requests').doc(id).delete().catch(() => {});
       });
-    return unsubscribe;
+    };
+
+    ids.forEach(reqId => {
+      const unsub = db.collection('pairing_requests').doc(reqId)
+        .onSnapshot((doc: any) => {
+          if (resolved) return;
+          const data = doc.data();
+          if (data?.status === 'approved') {
+            resolved = true;
+            cleanupAll();
+            // Store approved patient in connected patients list
+            if (window.firebaseService && (window.firebaseService as any).markPatientConnected) {
+              (window.firebaseService as any).markPatientConnected(data.patientId);
+            }
+            onApproved(data.patientId);
+          } else if (data?.status === 'denied') {
+            resolved = true;
+            cleanupAll();
+            onDenied();
+          }
+        });
+      unsubs.push(unsub);
+    });
+
+    return cleanupAll;
   },
 
   calculateGestosisScore: (patient: PatientRecord): number => {

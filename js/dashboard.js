@@ -115,7 +115,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             const patient = await window.firebaseService.getPatientById(connectId);
             if (patient) {
+                if (window.firebaseService.markPatientConnected) {
+                    window.firebaseService.markPatientConnected(patient.id);
+                    if (patient.pairingPin) window.firebaseService.markPatientConnected(patient.pairingPin);
+                }
                 window.firebaseService.bindPatient(connectId);
+                if (typeof fetchAndRender === 'function') {
+                    fetchAndRender();
+                }
                 // Manually open the side panel and wire the button since we are bypassing the list click
                 const sidePanel = document.getElementById('side-panel');
                 const panelName = document.getElementById('panel-name');
